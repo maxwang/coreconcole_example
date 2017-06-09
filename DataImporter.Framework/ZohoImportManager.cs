@@ -16,15 +16,13 @@ namespace DataImporter.Framework
     {
         protected readonly IZohoCRMDataRepository _zohoRepository;
         protected readonly IEmailSender _emailSender;
+        private bool _stopFlag = false;
 
         public event EventHandler<MessageEventArgs> DisplayMessage;
 
-        protected virtual void OnDisplayMessage(MessageEventArgs e)
+        private void OnDisplayMessage(MessageEventArgs e)
         {
-            if (DisplayMessage != null)
-            {
-                DisplayMessage(this, e);
-            }
+            DisplayMessage?.Invoke(this, e);
         }
 
         public ZohoImportManager(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
@@ -35,13 +33,28 @@ namespace DataImporter.Framework
 
         public async Task StartImportAsync()
         {
+            OnDisplayMessage(new MessageEventArgs { Message = "StartImportAsync" });
+
+            int i = 0;
+
+            while (_stopFlag == false)
+            {
+                OnDisplayMessage(new MessageEventArgs { Message = string.Format("StartImportAsync {0}", i) });
+                System.Threading.Thread.Sleep(10000);
+            }
+
             await Task.FromResult(true);
-            
+
+            OnDisplayMessage(new MessageEventArgs { Message = "StartImportAsync STOPPED" });
+
         }
 
 
         public async Task StopImportAsync()
         {
+            _stopFlag = true;
+
+            OnDisplayMessage(new MessageEventArgs { Message = "StopImportAsync" });
             await Task.FromResult(true);
         }
 

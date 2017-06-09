@@ -48,16 +48,27 @@ namespace ZohoImporter
 
             var task = Task.Factory.StartNew(async () =>
             {
-                token.ThrowIfCancellationRequested();
+                Console.WriteLine("start task");
+                if (token.IsCancellationRequested == true)
+                {
+                    Console.WriteLine("Task was cancelled before it got started.");
+                    token.ThrowIfCancellationRequested();
+                }
 
                 await importer.StartImportAsync();
+
                 if (token.IsCancellationRequested)
                 {
+                    Console.WriteLine("start ccancellation");
+
                     await importer.StopImportAsync();
                     token.ThrowIfCancellationRequested();
-                }    
+                }
 
-            }, tokenSource.Token);
+                
+                    
+
+            }, token);
 
 
             while (true)
@@ -68,6 +79,7 @@ namespace ZohoImporter
                     if (text == "quit")
                     {
                         tokenSource.Cancel();
+                        tokenSource.Dispose();
                         break;
                     }
                 }
@@ -76,8 +88,8 @@ namespace ZohoImporter
                     Console.WriteLine(ex.Message);
                 }
             }
-            
-            //Console.ReadLine();
+
+            Console.ReadLine();
 
 
         }
