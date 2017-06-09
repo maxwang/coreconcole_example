@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "ZohoImporter": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "CORE_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}
