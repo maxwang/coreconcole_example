@@ -8,12 +8,8 @@ namespace DataImporter.Framework.Services
 {
     public class SMSEmailSender : IEmailSender
     {
-        public void Dispose()
-        {
-            
-        }
-
-        public async Task SendEmailAsync(string email, string subject, string message)
+        
+        public async Task SendEmailAsync(string subject, string message)
         {
             Console.WriteLine("Send Email");
             await Task.FromResult(0);

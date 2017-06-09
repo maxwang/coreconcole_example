@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using DataImporter.Framework.Repository;
 using DataImporter.Framework;
+using System.Threading.Tasks;
+using System.Threading;
 
 namespace ZohoImporter
 {
@@ -21,37 +23,73 @@ namespace ZohoImporter
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true);
 
             var configuration = builder.Build();
-
-
-
-
+            
             //
             var services = new ServiceCollection();
-
-            services.AddTransient<IEmailSender, SMSEmailSender>();
 
             services.AddDbContext<ZohoCRMDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("ZohoCRMConnection")));
 
 
+            services.AddTransient<IEmailSender, SMSEmailSender>();
+            
             services.AddSingleton<IZohoCRMDataRepository, ZohoCRMDbRepository>();
 
 
             var provider = services.BuildServiceProvider();
 
-            var importer = new PartnerPortalImporter(provider.GetService<IZohoCRMDataRepository>());
-            importer.test();
+            var importer = new ZohoImportManager(provider.GetService<IZohoCRMDataRepository>(),
+                    provider.GetService<IEmailSender>());
+
+            importer.DisplayMessage += Importer_DisplayMessage;
+
+            var tokenSource = new CancellationTokenSource();
+            CancellationToken token = tokenSource.Token;
+
+            var task = Task.Factory.StartNew(async () =>
+            {
+                token.ThrowIfCancellationRequested();
+
+                await importer.StartImportAsync();
+                if (token.IsCancellationRequested)
+                {
+                    await importer.StopImportAsync();
+                    token.ThrowIfCancellationRequested();
+                }    
+
+            }, tokenSource.Token);
 
 
-            var emailsender = provider.GetService<IEmailSender>();
+            while (true)
+            {
+                try
+                {
+                    string text = Console.ReadLine().ToLower().Trim();
+                    if (text == "quit")
+                    {
+                        tokenSource.Cancel();
+                        break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.Message);
+                }
+            }
+            
+            //Console.ReadLine();
 
-            emailsender.SendEmailAsync("test", "test", "test");
-
-            Console.ReadLine();
-            //
 
         }
 
-       
+        private static void Importer_DisplayMessage(object sender, MessageEventArgs e)
+        {
+            MessageEventArgs mea = e as MessageEventArgs;
+            if (mea != null)
+            {
+                Console.WriteLine("[{0:yyyy MM dd HH:mm:ss}]: {1}", DateTime.Now, mea.Message);
+            }
+        }
+               
     }
 }
