@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataImporter.Framework
@@ -14,7 +15,13 @@ namespace DataImporter.Framework
         protected readonly IEmailSender _emailSender;
 
         protected string TableName;
-        protected bool Stop;
+
+        public ZohoImportBase(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
+        {
+            _zohoRepository = zohoRepository;
+            _emailSender = emailSender;
+        }
+
 
         protected virtual async Task<string> GetNextUpdatedRecordAsync(string id = "")
         {
@@ -29,54 +36,27 @@ namespace DataImporter.Framework
         {
             await Task.FromResult("");
         }
-
-        public void StopUpdate()
-        {
-            Stop = true;
-        }
-
-
-
-        public ZohoImportBase(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
-        {
-            _zohoRepository = zohoRepository;
-            _emailSender = emailSender;
-            Stop = false;
-        }
         
-        //public async Task ImportAysnc()
-        //{
-        //    while(true)
-        //    {
-        //        await ImportDataAsync();
-        //        if(Stop)
-        //        {
-        //            break;
-        //        }
 
-        //        //wait for one minute to check
-        //        System.Threading.Thread.Sleep(1000);
-
-        //    }
-        //}
-
-        public async Task ImportDataAsync()
+        public async Task ImportDataAsync(CancellationToken ct)
         {
             try
             {
+                ct.ThrowIfCancellationRequested();
+
                 var id = await GetNextUpdatedRecordAsync();
-                while(!string.IsNullOrEmpty(id))
+                
+                while (!string.IsNullOrEmpty(id))
                 {
-                    if(Stop)
-                    {
-                        break;
-                    }
+                    ct.ThrowIfCancellationRequested();
 
                     var importResult = await ProcessImport(id);
                     if(importResult)
                     {
                         await UpdateStatus(id);
                     }
+                    
+                    ct.ThrowIfCancellationRequested();
 
                     id = await GetNextUpdatedRecordAsync(id);
                 }
@@ -87,12 +67,6 @@ namespace DataImporter.Framework
                 string subject = string.Format("{0} import error", TableName);
                 await _emailSender.SendEmailAsync(subject, ex.StackTrace);
             }
-        }
-
-
-        public void test()
-        {
-            Console.WriteLine("test");
         }
         
     }

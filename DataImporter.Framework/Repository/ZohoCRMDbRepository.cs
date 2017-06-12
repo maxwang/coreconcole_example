@@ -1,4 +1,6 @@
 ﻿using DataImporter.Framework.Data;
+using DataImporter.Framework.Models;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,5 +15,7 @@ namespace DataImporter.Framework.Repository
         {
             _db = dbContext;
         }
+
+        public IEnumerable<ZohoCRMPartnerPortal> PartnerPortals => _db.PartnerPortals.AsNoTracking();
     }
 }

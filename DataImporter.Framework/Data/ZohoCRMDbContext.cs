@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using JetBrains.Annotations;
+using DataImporter.Framework.Models;
 
 namespace DataImporter.Framework.Data
 {
@@ -11,5 +12,7 @@ namespace DataImporter.Framework.Data
         public ZohoCRMDbContext(DbContextOptions options) : base(options)
         {
         }
+
+        public DbSet<ZohoCRMPartnerPortal> PartnerPortals { get; set; }
     }
 }

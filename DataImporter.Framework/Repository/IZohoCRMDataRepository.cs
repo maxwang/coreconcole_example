@@ -1,4 +1,5 @@
-﻿using System;
+﻿using DataImporter.Framework.Models;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -6,6 +7,6 @@ namespace DataImporter.Framework.Repository
 {
     public interface IZohoCRMDataRepository
     {
-
+        IEnumerable<ZohoCRMPartnerPortal> PartnerPortals { get; }
     }
 }

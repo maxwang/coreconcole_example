@@ -3,6 +3,7 @@ using DataImporter.Framework.Services;
 using System;
 using System.Collections.Generic;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace DataImporter.Framework
@@ -12,11 +13,14 @@ namespace DataImporter.Framework
         public string Message { get; set; }
     }
 
-    public class ZohoImportManager
+    public class ZohoImportManager: IDisposable
     {
         protected readonly IZohoCRMDataRepository _zohoRepository;
         protected readonly IEmailSender _emailSender;
-        private bool _stopFlag = false;
+        
+
+        private CancellationTokenSource _cts;
+        private CancellationToken _token;
 
         public event EventHandler<MessageEventArgs> DisplayMessage;
 
@@ -29,36 +33,49 @@ namespace DataImporter.Framework
         {
             _zohoRepository = zohoRepository;
             _emailSender = emailSender;
+            _cts = new CancellationTokenSource();
+            _token = _cts.Token;
         }
 
         public async Task StartImportAsync()
         {
-            OnDisplayMessage(new MessageEventArgs { Message = "StartImportAsync" });
-
-            int i = 0;
-
-            while (_stopFlag == false)
-            {
-                OnDisplayMessage(new MessageEventArgs { Message = string.Format("StartImportAsync {0}", i) });
-                System.Threading.Thread.Sleep(10000);
-            }
-
-            await Task.FromResult(true);
-
-            OnDisplayMessage(new MessageEventArgs { Message = "StartImportAsync STOPPED" });
-
+            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender);
+            await importer.ImportDataAsync(_token);
         }
 
 
         public async Task StopImportAsync()
         {
-            _stopFlag = true;
-
+            
             OnDisplayMessage(new MessageEventArgs { Message = "StopImportAsync" });
+
+            if(_cts != null)
+            {
+                _cts.Cancel();
+            }
             await Task.FromResult(true);
         }
 
+        private async Task StartParterPortalImporter()
+        {
+            _token.ThrowIfCancellationRequested();
 
+            for(int i =0; i< 10; i++)
+            {
+                _token.ThrowIfCancellationRequested();
+                OnDisplayMessage(new MessageEventArgs { Message = i.ToString() });
+                System.Threading.Thread.Sleep(5000);
+            }
 
+            await Task.FromResult(true);
+        }
+
+        public void Dispose()
+        {
+            if(_cts != null)
+            {   
+                _cts.Dispose();
+            }
+        }
     }
 }

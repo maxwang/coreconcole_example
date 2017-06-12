@@ -43,33 +43,9 @@ namespace ZohoImporter
 
             importer.DisplayMessage += Importer_DisplayMessage;
 
-            var tokenSource = new CancellationTokenSource();
-            CancellationToken token = tokenSource.Token;
-
-            var task = Task.Factory.StartNew(async () =>
-            {
-                Console.WriteLine("start task");
-                if (token.IsCancellationRequested == true)
-                {
-                    Console.WriteLine("Task was cancelled before it got started.");
-                    token.ThrowIfCancellationRequested();
-                }
-
-                await importer.StartImportAsync();
-
-                if (token.IsCancellationRequested)
-                {
-                    Console.WriteLine("start ccancellation");
-
-                    await importer.StopImportAsync();
-                    token.ThrowIfCancellationRequested();
-                }
-
-                
-                    
-
-            }, token);
-
+            var starter = StartImportTask(importer);
+            
+            DisplayMessage("Start.....");
 
             while (true)
             {
@@ -78,8 +54,8 @@ namespace ZohoImporter
                     string text = Console.ReadLine().ToLower().Trim();
                     if (text == "quit")
                     {
-                        tokenSource.Cancel();
-                        tokenSource.Dispose();
+                        DisplayMessage("Quiting.....");
+                        importer.StopImportAsync().Wait();
                         break;
                     }
                 }
@@ -94,13 +70,26 @@ namespace ZohoImporter
 
         }
 
+        private static async Task StartImportTask(ZohoImportManager importer)
+        {
+            await Task.Factory.StartNew(async () =>
+            {
+                await importer.StartImportAsync();
+            });
+        }
+
         private static void Importer_DisplayMessage(object sender, MessageEventArgs e)
         {
             MessageEventArgs mea = e as MessageEventArgs;
             if (mea != null)
             {
-                Console.WriteLine("[{0:yyyy MM dd HH:mm:ss}]: {1}", DateTime.Now, mea.Message);
+                DisplayMessage(mea.Message);
             }
+        }
+
+        private static void DisplayMessage(string message)
+        {
+            Console.WriteLine("[{0:yyyy MM dd HH:mm:ss}]: {1}", DateTime.Now, message);
         }
                
     }
