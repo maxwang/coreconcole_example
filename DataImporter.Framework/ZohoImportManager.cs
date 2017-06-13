@@ -56,19 +56,19 @@ namespace DataImporter.Framework
             await Task.FromResult(true);
         }
 
-        private async Task StartParterPortalImporter()
-        {
-            _token.ThrowIfCancellationRequested();
+        //private async Task StartParterPortalImporter()
+        //{
+        //    _token.ThrowIfCancellationRequested();
 
-            for(int i =0; i< 10; i++)
-            {
-                _token.ThrowIfCancellationRequested();
-                OnDisplayMessage(new MessageEventArgs { Message = i.ToString() });
-                System.Threading.Thread.Sleep(5000);
-            }
+        //    for(int i =0; i< 10; i++)
+        //    {
+        //        _token.ThrowIfCancellationRequested();
+        //        OnDisplayMessage(new MessageEventArgs { Message = i.ToString() });
+        //        System.Threading.Thread.Sleep(5000);
+        //    }
 
-            await Task.FromResult(true);
-        }
+        //    await Task.FromResult(true);
+        //}
 
         public void Dispose()
         {

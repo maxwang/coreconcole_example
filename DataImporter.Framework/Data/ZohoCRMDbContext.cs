@@ -9,10 +9,14 @@ namespace DataImporter.Framework.Data
 {
     public class ZohoCRMDbContext : DbContext
     {
-        public ZohoCRMDbContext(DbContextOptions options) : base(options)
+        public ZohoCRMDbContext(DbContextOptions<ZohoCRMDbContext> options) : base(options)
         {
         }
 
         public DbSet<ZohoCRMPartnerPortal> PartnerPortals { get; set; }
+        public DbSet<ZohoTableStatus> TableStatus { get; set; }
+
+        public DbSet<ZohoAccount> Accounts { get; set; }
+        public DbSet<ZohoContact> Contacts { get; set; }
     }
 }

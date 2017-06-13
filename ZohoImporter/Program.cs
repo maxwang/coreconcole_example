@@ -8,6 +8,9 @@ using DataImporter.Framework.Repository;
 using DataImporter.Framework;
 using System.Threading.Tasks;
 using System.Threading;
+using DataImporter.Framework.Models;
+using DataImporter.Framework.Extensions;
+using Website.Extensions;
 
 namespace ZohoImporter
 {
@@ -23,16 +26,35 @@ namespace ZohoImporter
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true);
 
             var configuration = builder.Build();
-            
+
             //
             var services = new ServiceCollection();
 
             services.AddDbContext<ZohoCRMDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("ZohoCRMConnection")));
 
+            //services.AddDbContext<ACLDbContext>(options =>
+            //{
+            //    options.UseSqlServer(configuration.GetConnectionString("ACLConnection"));
+                
+            //});
+
+            //services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
+            //{
+            //    options.Password.RequiredLength = 6;
+            //    options.Password.RequireNonAlphanumeric = false;
+            //    options.Password.RequireUppercase = false;
+
+            //})
+            //    .AddEntityFrameworkStores<ACLDbContext>()
+            //    .AddUserStore<SMSUserStore<ApplicationUser>>()
+            //    .AddUserManager<SMSUserManager<ApplicationUser>>()
+            //    .AddDefaultTokenProviders();
+
+
 
             services.AddTransient<IEmailSender, SMSEmailSender>();
-            
+
             services.AddSingleton<IZohoCRMDataRepository, ZohoCRMDbRepository>();
 
 
@@ -43,8 +65,12 @@ namespace ZohoImporter
 
             importer.DisplayMessage += Importer_DisplayMessage;
 
-            var starter = StartImportTask(importer);
-            
+            var cts = new CancellationTokenSource();
+            CancellationToken ct = cts.Token;
+
+
+            var starter = StartImportTask(importer, ct);
+
             DisplayMessage("Start.....");
 
             while (true)
@@ -55,6 +81,7 @@ namespace ZohoImporter
                     if (text == "quit")
                     {
                         DisplayMessage("Quiting.....");
+                        cts.Cancel();
                         importer.StopImportAsync().Wait();
                         break;
                     }
@@ -70,11 +97,25 @@ namespace ZohoImporter
 
         }
 
-        private static async Task StartImportTask(ZohoImportManager importer)
+        private static async Task StartImportTask(ZohoImportManager importer, CancellationToken token)
         {
             await Task.Factory.StartNew(async () =>
             {
-                await importer.StartImportAsync();
+                while (true)
+                {
+                    if (token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    await importer.StartImportAsync();
+
+                    if (token.IsCancellationRequested)
+                    {
+                        break;
+                    }
+                    Thread.Sleep(30000);
+                }
+
             });
         }
 
@@ -91,6 +132,6 @@ namespace ZohoImporter
         {
             Console.WriteLine("[{0:yyyy MM dd HH:mm:ss}]: {1}", DateTime.Now, message);
         }
-               
+
     }
 }
