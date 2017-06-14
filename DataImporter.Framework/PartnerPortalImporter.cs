@@ -65,7 +65,7 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Resutl = string.Format("Could not find partner portal record for id:{0}", id)
+                    Result = string.Format("Could not find partner portal record for id:{0}", id)
                 };
             }
 
@@ -92,21 +92,27 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Resutl = string.Format("Could not find partner portal admin contact:{0}", contactId)
+                    Result = string.Format("Could not find partner portal admin contact:{0}", contactId)
                 };
             }
 
             //check contact created in company
             var company = await _userManager.GetCompanyByZohoAccountIdAsync(accountId);
-            if(company == null)
+            int companyId;
+            if (company == null)
             {
-                var companyId = await _userManager.CreateCompanyAsync(new Company
+                companyId = await _userManager.CreateCompanyAsync(new Company
                 {
                     CompanyZohoAccountId = accountId,
                     CreatedBy = "importer",
                     CreatedTime = DateTime.Now
                 });
             }
+            else
+            {
+                companyId = company.Id;
+            }
+
 
             //check user information
 
@@ -117,12 +123,19 @@ namespace DataImporter.Framework
             {
                 //create user
                 var now = DateTime.Now;
-                var tempuser = new ApplicationUser() { UserName = contact.Email, Email = contact.Email, LastPasswordChangedDate = now, CreationDate = now };
+                var tempuser = new ApplicationUser() { UserName = contact.Email, Email = contact.Email, LastPasswordChangedDate = now, CreationDate = now, CompanyId = companyId };
                 var result = await _userManager.CreateAsync(tempuser, _tempPassword);
 
                 if (result.Succeeded)
                 {
                     var roleResult = await _userManager.AddToRoleAsync(tempuser, DefaultRoleName);
+
+                    var userContact = await _userManager.CreateUserZohoContactAsync(new UserZohoContact
+                    {
+                        UserId = tempuser.Id,
+                        ZohoContactId = contactId
+                    });
+
                     if (roleResult.Succeeded)
                     {
                         isSuccess = true;
@@ -140,24 +153,63 @@ namespace DataImporter.Framework
                     message = result.ToString();
                 }
             }
-            else
+            else 
             {
-                if(await _userManager.IsInRoleAsync(user, DefaultRoleName) == false)
+                if(!user.CompanyId.HasValue || user.CompanyId.Value < 1)
                 {
-                   var roleAdded =  await _userManager.AddToRoleAsync(user, DefaultRoleName);
-                    if(roleAdded.Succeeded)
-                    {
-                        isSuccess = true;
-                        message = string.Format("User role added for user :{0}", user.UserName);
-                    }
+                    message = string.Format("User {0} already exist in ACL but Could not find Company infomraiton for User:", user.UserName);
                 }
+                else
+                {
+                    var companyInfo = await _userManager.GetCompanyAsync(user.CompanyId.Value);
+                    if(companyInfo == null)
+                    {
+                        message = string.Format("User {0} already exist in ACL but Could not find Company infomraiton for User:", user.UserName);
+                    }
+                    else
+                    {
+                        if(!companyInfo.CompanyZohoAccountId.Equals(accountId))
+                        {
+                            message = string.Format("User {0} already exist in ACL but belongs to another account:{1}", user.UserName, companyInfo.CompanyZohoAccountId);
+                        }
+                        else
+                        {
+                            var userContact = await _userManager.GetUserZohoContactAsync(user.Id);
+                            if (userContact == null)
+                            {
+                                message = string.Format("User {0} already exist in ACL, but could not find contact id with this use", user.UserName);
+                            }
+                            else if (userContact.ZohoContactId != contactId)
+                            {
+                                message = string.Format("User {0} already exist in ACL, with different contact id:{1}[should be {2}]", user.UserName, userContact.ZohoContactId, contactId);
+                            }
+                            else
+                            {
+
+                                if (await _userManager.IsInRoleAsync(user, DefaultRoleName) == false)
+                                {
+                                    var roleAdded = await _userManager.AddToRoleAsync(user, DefaultRoleName);
+                                    if (roleAdded.Succeeded)
+                                    {
+                                        isSuccess = true;
+                                        message = string.Format("User role added for user :{0}", user.UserName);
+                                    }
+                                }
+                                else
+                                {
+                                    isSuccess = true;
+                                    message = string.Format("user exist in system, do not import", user.UserName);
+                                }
+                            }
+                        }
+                    }
+                }    
             }
             
-
             return new PortalActionResult
             {
                 IsSuccess = isSuccess,
-                Resutl = message
+                Result = message
             };
             
             

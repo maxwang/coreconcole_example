@@ -13,8 +13,7 @@ namespace DataImporter.Framework.Data
         public ACLDbContext(DbContextOptions<ACLDbContext> options)
             : base(options)
         {
-            var i = 0;
-            i++;
+            
         }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -32,12 +31,11 @@ namespace DataImporter.Framework.Data
 
             base.OnConfiguring(optionsBuilder);
         }
-
-        //protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        //{
-        //    optionsBuilder.UseSqlServer(ConfigurationManager.ConnectionStrings["DefaultConnection"].ConnectionString);
-        //    base.OnConfiguring(optionsBuilder);
-        //}
+        
         public DbSet<Company> Companies { get; set; }
+
+        public DbSet<CompanyClaims> CompanyClaims { get; set; }
+
+        public DbSet<UserZohoContact> UserZohoContacts { get; set; }
     }
 }

@@ -53,9 +53,11 @@ namespace ZohoImporter
 
 
 
-            services.AddTransient<IEmailSender, SMSEmailSender>();
+            services.AddSingleton<IEmailSender, SMSEmailSender>);
 
-            services.AddSingleton<IZohoCRMDataRepository, ZohoCRMDbRepository>();
+            services.AddScoped<IZohoCRMDataRepository, ZohoCRMDbRepository>();
+
+            //services.AddSingleton<IZohoCRMDataRepository, ZohoCRMDbRepository>();
 
 
             var provider = services.BuildServiceProvider();
@@ -91,10 +93,7 @@ namespace ZohoImporter
                     Console.WriteLine(ex.Message);
                 }
             }
-
-            Console.ReadLine();
-
-
+            
         }
 
         private static async Task StartImportTask(ZohoImportManager importer, CancellationToken token)
@@ -121,8 +120,7 @@ namespace ZohoImporter
 
         private static void Importer_DisplayMessage(object sender, MessageEventArgs e)
         {
-            MessageEventArgs mea = e as MessageEventArgs;
-            if (mea != null)
+            if (e is MessageEventArgs mea)
             {
                 DisplayMessage(mea.Message);
             }

@@ -18,5 +18,9 @@ namespace DataImporter.Framework.Data
 
         public DbSet<ZohoAccount> Accounts { get; set; }
         public DbSet<ZohoContact> Contacts { get; set; }
+
+        public DbSet<ZohoActionLog> ActionLogs { get; set; }
+
+        public DbSet<ZohoBitdefender> Bitdefenders { get; set; }
     }
 }

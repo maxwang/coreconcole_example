@@ -9,6 +9,6 @@ namespace DataImporter.Framework.Models
     public class PortalActionResult
     {
         public bool IsSuccess { get; set; }
-        public string Resutl { get; set; }
+        public string Result { get; set; }
     }
 }

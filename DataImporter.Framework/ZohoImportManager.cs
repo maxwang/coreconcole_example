@@ -24,9 +24,9 @@ namespace DataImporter.Framework
 
         public event EventHandler<MessageEventArgs> DisplayMessage;
 
-        private void OnDisplayMessage(MessageEventArgs e)
+        private void OnDisplayMessage(string message)
         {
-            DisplayMessage?.Invoke(this, e);
+            DisplayMessage?.Invoke(this, new MessageEventArgs { Message = message });
         }
 
         public ZohoImportManager(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
@@ -39,15 +39,37 @@ namespace DataImporter.Framework
 
         public async Task StartImportAsync()
         {
-            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender);
-            await importer.ImportDataAsync(_token);
+            await StartPartnerPortalImportAsync();
+            await StartBitDefenderImportAsync();
         }
 
+        public async Task StartPartnerPortalImportAsync()
+        {
+            
+            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender);
+
+            importer.DisplayMessage += DisplayMessage;
+
+            await importer.ImportDataAsync(_token);
+            
+            
+        }
+
+        public async Task StartBitDefenderImportAsync()
+        {
+            //EF is not thread safe, could not do this way
+            //await Task.Factory.StartNew(async () =>
+            //{
+                BitdefenderImporter bdImporter = new BitdefenderImporter(_zohoRepository, _emailSender);
+                bdImporter.DisplayMessage += DisplayMessage;
+                await bdImporter.ImportDataAsync(_token);
+            //});
+        }
 
         public async Task StopImportAsync()
         {
             
-            OnDisplayMessage(new MessageEventArgs { Message = "StopImportAsync" });
+            OnDisplayMessage("StopImportAsync");
 
             if(_cts != null)
             {

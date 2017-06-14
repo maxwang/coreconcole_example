@@ -12,8 +12,11 @@ namespace DataImporter.Framework.Repository
         IEnumerable<ZohoTableStatus> TableStatus { get; }
         IEnumerable<ZohoContact> Contacts { get; }
         //IEnumerable<ZohoAccount> Accounts { get; }
+        IEnumerable<ZohoBitdefender> Bitdefenders { get; }
 
         Task<bool> UpdateTableStatusAsync(ZohoTableStatus status);
+
+        Task<int> AddActionLogAsync(ZohoActionLog log);
         
     }
 }

@@ -7,6 +7,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataImporter.Framework", "D
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZohoImporter", "ZohoImporter\ZohoImporter.csproj", "{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{503BE148-AC58-4A33-B651-55575F35BB0A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMTPTest", "Test\SMTPTest\SMTPTest.csproj", "{00D65E4C-9AA6-4195-B93D-65CD2397153D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,8 +25,15 @@ Global
 		{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{00D65E4C-9AA6-4195-B93D-65CD2397153D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{00D65E4C-9AA6-4195-B93D-65CD2397153D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{00D65E4C-9AA6-4195-B93D-65CD2397153D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{00D65E4C-9AA6-4195-B93D-65CD2397153D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{00D65E4C-9AA6-4195-B93D-65CD2397153D} = {503BE148-AC58-4A33-B651-55575F35BB0A}
 	EndGlobalSection
 EndGlobal

@@ -41,6 +41,19 @@ namespace Website.Extensions
             return await uStore.GetUserRolesAsync(user.Id);
         }
 
+        //do not use role manager here, use
+        public override async Task<bool> IsInRoleAsync(ApplicationUser user, string role)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.IsInRoleAsync(user.Id, role);
+        }
+
+        public override Task<IdentityResult> AddToRoleAsync(ApplicationUser user, string role)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return uStore.AddToRoleAsync(user, role);
+        }
+
         public override async Task<IdentityResult> AddPasswordAsync(ApplicationUser user, string password)
         {
             var result = await base.AddPasswordAsync(user, password);
@@ -106,6 +119,30 @@ namespace Website.Extensions
             return await uStore.GetCompanyAsync(companyId);
         }
 
-        
+        public async Task<int> CreateCompanyClaimAsync(CompanyClaims claim)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.CreateCompanyClaimAsync(claim);
+        }
+
+        public async Task<bool> ComanyHasClaimAsync(int companyId, string claimType, string claimValue)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.ComanyHasClaimAsync(companyId, claimType, claimValue);
+        }
+
+        public async Task<UserZohoContact> GetUserZohoContactAsync(string userId)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.GetUserZohoContactAsync(userId);
+        }
+
+        public async Task<int> CreateUserZohoContactAsync(UserZohoContact userContact)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.CreateUserZohoContactAsync(userContact);
+        }
+
+
     }
 }

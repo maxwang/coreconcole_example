@@ -21,17 +21,27 @@ namespace DataImporter.Framework.Repository
 
         public IEnumerable<ZohoTableStatus> TableStatus => _db.TableStatus.AsNoTracking();
 
-        //public IEnumerable<ZohoAccount> Accounts => _db.Accounts.AsNoTracking();
+        public IEnumerable<ZohoBitdefender> Bitdefenders => _db.Bitdefenders.AsNoTracking();
 
         public IEnumerable<ZohoContact> Contacts => _db.Contacts.AsNoTracking();
 
+        public async Task<int> AddActionLogAsync(ZohoActionLog log)
+        {
+            var result = await _db.ActionLogs.AddAsync(log);
+            await _db.SaveChangesAsync();
+            return log.ActionLogId;
+
+        }
+
         public async Task<bool> UpdateTableStatusAsync(ZohoTableStatus status)
         {
-            var record = await _db.TableStatus.FirstOrDefaultAsync(x => x.TableStatusId == status.TableStatusId);
+            var record = await _db.TableStatus.SingleOrDefaultAsync(x => x.TableStatusId == status.TableStatusId);
             if(record == null)
             {
                 return false;
             }
+
+
 
             record.PortalAction = status.PortalAction;
             record.PortalActionResult = status.PortalActionResult;
