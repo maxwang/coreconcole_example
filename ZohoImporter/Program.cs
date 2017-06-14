@@ -26,7 +26,7 @@ namespace ZohoImporter
                 .AddJsonFile($"appsettings.{environmentName}.json", optional: true);
 
             var configuration = builder.Build();
-
+            
             //
             var services = new ServiceCollection();
 
@@ -36,7 +36,7 @@ namespace ZohoImporter
             //services.AddDbContext<ACLDbContext>(options =>
             //{
             //    options.UseSqlServer(configuration.GetConnectionString("ACLConnection"));
-                
+
             //});
 
             //services.AddIdentity<ApplicationUser, ApplicationRole>(options =>
@@ -52,8 +52,8 @@ namespace ZohoImporter
             //    .AddDefaultTokenProviders();
 
 
-
-            services.AddSingleton<IEmailSender, SMSEmailSender>);
+            services.Configure<SMTPOptions>(configuration.GetSection("SMTPSettings"));
+            services.AddSingleton<IEmailSender, SMSEmailSender>();
 
             services.AddScoped<IZohoCRMDataRepository, ZohoCRMDbRepository>();
 
