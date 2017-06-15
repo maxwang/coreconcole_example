@@ -70,8 +70,9 @@ namespace ZohoImporter
             var cts = new CancellationTokenSource();
             CancellationToken ct = cts.Token;
 
+            int intervalSeconds = configuration.GetValue<int>("ImportDelay", 30);
 
-            var starter = StartImportTask(importer, ct);
+            var starter = StartImportTask(importer, ct, intervalSeconds);
 
             DisplayMessage("Start.....");
 
@@ -96,7 +97,7 @@ namespace ZohoImporter
             
         }
 
-        private static async Task StartImportTask(ZohoImportManager importer, CancellationToken token)
+        private static async Task StartImportTask(ZohoImportManager importer, CancellationToken token, int intervalSeconds = 30)
         {
             await Task.Factory.StartNew(async () =>
             {
@@ -112,7 +113,8 @@ namespace ZohoImporter
                     {
                         break;
                     }
-                    Thread.Sleep(30000);
+
+                    Thread.Sleep(intervalSeconds * 1000);
                 }
 
             });
