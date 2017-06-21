@@ -80,6 +80,8 @@ namespace DataImporter.Framework.Models
         public int PositiveScore { get; set; }
         public int NegativeScore { get; set; }
         public string PartnerPortalEnabled { get; set; }
+        public bool PortalAdmin { get; set; }
+
         public int PositiveTouchPointScore { get; set; }
         public int TouchPointScore { get; set; }
         public int NegativeTouchPointScore { get; set; }

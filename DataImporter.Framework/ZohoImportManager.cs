@@ -15,9 +15,9 @@ namespace DataImporter.Framework
 
     public class ZohoImportManager: IDisposable
     {
-        protected readonly IZohoCRMDataRepository _zohoRepository;
-        protected readonly IEmailSender _emailSender;
-        
+        private readonly IZohoCRMDataRepository _zohoRepository;
+        private readonly IEmailSender _emailSender;
+        private string _zohoToken;
 
         private CancellationTokenSource _cts;
         private CancellationToken _token;
@@ -29,10 +29,11 @@ namespace DataImporter.Framework
             DisplayMessage?.Invoke(this, new MessageEventArgs { Message = message });
         }
 
-        public ZohoImportManager(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
+        public ZohoImportManager(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken)
         {
             _zohoRepository = zohoRepository;
             _emailSender = emailSender;
+            _zohoToken = zohoToken;
             _cts = new CancellationTokenSource();
             _token = _cts.Token;
         }
@@ -46,7 +47,7 @@ namespace DataImporter.Framework
         public async Task StartPartnerPortalImportAsync()
         {
             
-            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender);
+            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender, _zohoToken);
 
             importer.DisplayMessage += DisplayMessage;
 

@@ -13,6 +13,8 @@ using Microsoft.Extensions.Logging;
 using DataImporter.Framework.Extensions;
 using DataImporter.Framework.Data;
 using Microsoft.EntityFrameworkCore;
+using ZohoCRMProxy;
+using ZohoContact = DataImporter.Framework.Models.ZohoContact;
 
 namespace DataImporter.Framework
 {
@@ -21,15 +23,17 @@ namespace DataImporter.Framework
 
         private SMSUserManager<ApplicationUser> _userManager;
         private string _tempPassword;
+        private string _zohoToken;
 
-        public PartnerPortalImporter(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender) : base(zohoRepository, emailSender)
+        public PartnerPortalImporter(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken) : base(zohoRepository, emailSender)
         {
             TableName = "zcrm_PartnerPortal";
 
             PortalAction = "Add User and Company to ACL";
 
             _tempPassword = "A1b2@C3d4";
-            
+            _zohoToken = zohoToken;
+
             var pwdValidators = new List<PasswordValidator<ApplicationUser>>();
             var pwdValidator = new PasswordValidator<ApplicationUser>();
 
@@ -73,8 +77,7 @@ namespace DataImporter.Framework
 
             var contactId = partnerPortal.PortalAdmin;
 
-
-
+            
             //in ACL, we do not care about Account information, we only link Company to Account using contact id
             //var account = _zohoRepository.Accounts.FirstOrDefault(x => x.AccountID == accountId);
             //if (account == null)
@@ -205,14 +208,74 @@ namespace DataImporter.Framework
                     }
                 }    
             }
-            
-            return new PortalActionResult
+
+            if (isSuccess)
             {
-                IsSuccess = isSuccess,
-                Result = message
-            };
-            
+                var updateResult = UpdatePortalAdminIfNeeded(contact);
+                return new PortalActionResult
+                {
+                    IsSuccess = updateResult.IsSuccess,
+                    Result = string.Format("{0}\r\n{1}", message, updateResult.Result)
+                };
+            }
+            else
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Result = message
+                };
+
+            }
             
         }
+
+
+        private PortalActionResult UpdatePortalAdminIfNeeded(ZohoContact contact)
+        {
+            if (contact.PortalAdmin)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess =  true,
+                    Result = "Portal Admin is true in Database, ignore update"
+                };
+            }
+
+            var zohoContact = new ZohoCRMProxy.ZohoContact
+            {
+                Id = contact.ContactID,
+                PortalAdmin = true,
+                PartnerPortalEnabled = contact.PartnerPortalEnabled.Equals("true", StringComparison.CurrentCultureIgnoreCase),
+                SAPUnqualified = contact.SAPUnqualified.Equals("true", StringComparison.CurrentCultureIgnoreCase),
+                EmailOptOut = contact.EmailOptOut.Equals("true", StringComparison.CurrentCultureIgnoreCase),
+            };
+
+            using (ZohoCRMProxy.ZohoCRMContact request = new ZohoCRMContact(_zohoToken))
+            {
+                try
+                {
+                    var result = request.Update(zohoContact);
+                    return new PortalActionResult
+                    {
+                        IsSuccess = true,
+                        Result = "Zoho Contact Portal Admin Updated."
+                    };
+                }
+                catch (Exception e)
+                {
+                    return new PortalActionResult
+                    {
+                        IsSuccess = false,
+                        Result = e.Message
+                    };
+                }
+                
+            }
+
+
+        }
+
+
     }
 }

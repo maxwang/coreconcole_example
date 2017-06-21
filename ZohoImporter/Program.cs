@@ -63,7 +63,7 @@ namespace ZohoImporter
             var provider = services.BuildServiceProvider();
 
             var importer = new ZohoImportManager(provider.GetService<IZohoCRMDataRepository>(),
-                    provider.GetService<IEmailSender>());
+                    provider.GetService<IEmailSender>(), configuration.GetValue<string>("ZohoToken"));
 
             importer.DisplayMessage += Importer_DisplayMessage;
 
@@ -85,7 +85,7 @@ namespace ZohoImporter
                     {
                         DisplayMessage("Quiting.....");
                         cts.Cancel();
-                        importer.StopImportAsync().Wait();
+                        importer.StopImportAsync().Wait(ct);
                         break;
                     }
                 }
