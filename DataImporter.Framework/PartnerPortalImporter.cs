@@ -211,7 +211,7 @@ namespace DataImporter.Framework
 
             if (isSuccess)
             {
-                var updateResult = UpdatePortalAdminIfNeeded(contact);
+                var updateResult = UpdateZohoIfNeeded(contact, partnerPortal);
                 return new PortalActionResult
                 {
                     IsSuccess = updateResult.IsSuccess,
@@ -231,49 +231,86 @@ namespace DataImporter.Framework
         }
 
 
-        private PortalActionResult UpdatePortalAdminIfNeeded(ZohoContact contact)
+        private PortalActionResult UpdateZohoIfNeeded(ZohoContact contact, Models.ZohoCRMPartnerPortal partnerPortal)
         {
+            PortalActionResult result = new PortalActionResult();
+
+            StringBuilder message = new StringBuilder();
+
+            result.IsSuccess = false;
+
+            var needUpdateContact = true;
+            var needUpdatePartnerPortal = true;
+
             if (contact.PortalAdmin)
             {
-                return new PortalActionResult
+                needUpdateContact = false;
+                message.AppendLine("Portal Admin is true in Database, ignore update");
+            }
+
+            if (partnerPortal.ACLCreated.Equals("true", StringComparison.CurrentCultureIgnoreCase))
+            {
+                needUpdatePartnerPortal = false;
+                message.AppendLine("Portal Portal ACL Created is true in Database, ignore update");
+            }
+
+            if (needUpdateContact)
+            {
+                var zohoContact = new ZohoCRMProxy.ZohoContact
                 {
-                    IsSuccess =  true,
-                    Result = "Portal Admin is true in Database, ignore update"
+                    Id = contact.ContactID,
+                    PortalAdmin = true,
+                    PartnerPortalEnabled =
+                        contact.PartnerPortalEnabled.Equals("true", StringComparison.CurrentCultureIgnoreCase),
+                    SAPUnqualified = contact.SAPUnqualified.Equals("true", StringComparison.CurrentCultureIgnoreCase),
+                    EmailOptOut = contact.EmailOptOut.Equals("true", StringComparison.CurrentCultureIgnoreCase),
                 };
+
+                using (ZohoCRMProxy.ZohoCRMContact request = new ZohoCRMContact(_zohoToken))
+                {
+                    try
+                    {
+                        var contactResult = request.Update(zohoContact);
+                        result.IsSuccess = true;
+                        message.AppendLine("Zoho Contact Portal Admin Updated.");
+                    }
+                    catch (Exception e)
+                    {
+                        result.IsSuccess = false;
+                        message.AppendLine(e.Message);
+             
+                    }
+
+                }
             }
 
-            var zohoContact = new ZohoCRMProxy.ZohoContact
+            if (needUpdatePartnerPortal && result.IsSuccess)
             {
-                Id = contact.ContactID,
-                PortalAdmin = true,
-                PartnerPortalEnabled = contact.PartnerPortalEnabled.Equals("true", StringComparison.CurrentCultureIgnoreCase),
-                SAPUnqualified = contact.SAPUnqualified.Equals("true", StringComparison.CurrentCultureIgnoreCase),
-                EmailOptOut = contact.EmailOptOut.Equals("true", StringComparison.CurrentCultureIgnoreCase),
-            };
+                var portal = new ZohoPartnerPortal
+                {
+                    Id = partnerPortal.PartnerPortalID,
+                    ACLCreated = true
+                };
+                using (ZohoCRMProxy.ZohoCRMPartnerPortal portalRequest = new ZohoCRMProxy.ZohoCRMPartnerPortal(_zohoToken))
+                {
+                    try
+                    {
+                        portalRequest.Update(portal);
+                        result.IsSuccess = true;
+                        message.AppendLine("Zoho Partner Portal ACL Created Updated.");
 
-            using (ZohoCRMProxy.ZohoCRMContact request = new ZohoCRMContact(_zohoToken))
-            {
-                try
-                {
-                    var result = request.Update(zohoContact);
-                    return new PortalActionResult
+                    }
+                    catch (Exception e)
                     {
-                        IsSuccess = true,
-                        Result = "Zoho Contact Portal Admin Updated."
-                    };
+                        result.IsSuccess = false;
+                        message.AppendLine(e.Message);
+                    }
                 }
-                catch (Exception e)
-                {
-                    return new PortalActionResult
-                    {
-                        IsSuccess = false,
-                        Result = e.Message
-                    };
-                }
-                
             }
 
+            result.Result = message.ToString();
 
+            return result;
         }
 
 
