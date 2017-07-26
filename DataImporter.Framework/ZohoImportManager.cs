@@ -43,8 +43,8 @@ namespace DataImporter.Framework
         public async Task StartImportAsync()
         {
             await StartPartnerPortalImportAsync();
-            //await StartBitDefenderImportAsync();
-            //await StartMyobDataSynchronizationAsync();
+            await StartBitDefenderImportAsync();
+            await StartMyobDataSynchronizationAsync();
         }
 
         private async Task StartMyobDataSynchronizationAsync()
