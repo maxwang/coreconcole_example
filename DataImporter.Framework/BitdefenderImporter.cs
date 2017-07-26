@@ -56,16 +56,16 @@ namespace DataImporter.Framework
                     new Logger<UserManager<ApplicationUser>>(log));
         }
 
-        protected async override Task<PortalActionResult> ProcessImport(string id)
+        protected override async Task<PortalActionResult> ProcessImport(string id)
         {
-            var bitdefender = ZohoRepository.Bitdefenders.SingleOrDefault(x => x.BitdefenderID.Equals(id, StringComparison.CurrentCultureIgnoreCase));
+            var bitdefender = ZohoRepository.Bitdefenders.FirstOrDefault(x => x.BitdefenderID.Equals(id, StringComparison.CurrentCultureIgnoreCase));
 
             if (bitdefender == null)
             {
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Result = string.Format("Could not find Bitdefender record for id:{0}", id)
+                    Message = string.Format("Could not find Bitdefender record for id:{0}", id)
                 };
             }
 
@@ -78,7 +78,7 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Result = string.Format("Could not find Account/Company information for Zoho Account id:{0}", accountId)
+                    Message = string.Format("Could not find Account/Company information for Zoho Account id:{0}", accountId)
                 };
             }
 
@@ -88,7 +88,7 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = true,
-                    Result = string.Format("Account {0} already has Bitdefender module permission", accountId)
+                    Message = string.Format("Account {0} already has Bitdefender module permission", accountId)
                 };
 
             }
@@ -105,7 +105,7 @@ namespace DataImporter.Framework
             return new PortalActionResult
             {
                 IsSuccess = true,
-                Result = string.Format("Bitdefender Permission added for Account:{0}", accountId)
+                Message = string.Format("Bitdefender Permission added for Account:{0}", accountId)
             };
 
 

@@ -8,7 +8,7 @@ namespace DataImporter.Framework.Models
 {
 
     [Table("zcrm_PartnerPortal")]
-    public class ZohoCRMPartnerPortal
+    public class ZohoPartnerPortal
     {
         [Key]
         public string PartnerPortalID { get; set; }

@@ -8,11 +8,12 @@ namespace DataImporter.Framework.Repository
 {
     public interface IZohoCRMDataRepository
     {
-        IEnumerable<ZohoCRMPartnerPortal> PartnerPortals { get; }
+        IEnumerable<ZohoPartnerPortal> PartnerPortals { get; }
         IEnumerable<ZohoTableStatus> TableStatus { get; }
         IEnumerable<ZohoContact> Contacts { get; }
-        //IEnumerable<ZohoAccount> Accounts { get; }
+        IEnumerable<ZohoAccount> Accounts { get; }
         IEnumerable<ZohoBitdefender> Bitdefenders { get; }
+        IEnumerable<ZohoProduct> Products { get; }
 
         Task<bool> UpdateTableStatusAsync(ZohoTableStatus status);
 

@@ -3,9 +3,9 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26430.4
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataImporter.Framework", "DataImporter.Framework\DataImporter.Framework.csproj", "{7E99C9B9-DD74-4B73-8AE9-3497B8482AA2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataImporter.Framework", "DataImporter.Framework\DataImporter.Framework.csproj", "{7E99C9B9-DD74-4B73-8AE9-3497B8482AA2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZohoImporter", "ZohoImporter\ZohoImporter.csproj", "{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZohoImporter", "ZohoImporter\ZohoImporter.csproj", "{FFF5AFF3-1FC9-4AEC-AD5B-33A9F8BDCA2C}"
 	ProjectSection(ProjectDependencies) = postProject
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891} = {64F24C03-BAC9-4958-BBCE-94562A5C8891}
 		{5574A4F9-A9DA-429A-A1F8-3D419BDBD4F6} = {5574A4F9-A9DA-429A-A1F8-3D419BDBD4F6}
@@ -13,11 +13,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ZohoImporter", "ZohoImporte
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{503BE148-AC58-4A33-B651-55575F35BB0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SMTPTest", "Test\SMTPTest\SMTPTest.csproj", "{00D65E4C-9AA6-4195-B93D-65CD2397153D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SMTPTest", "Test\SMTPTest\SMTPTest.csproj", "{00D65E4C-9AA6-4195-B93D-65CD2397153D}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZohoCRMProxy", "..\..\ZohoProxy\ZohoCRMProxyMultiTarget\ZohoCRMProxy\ZohoCRMProxy\ZohoCRMProxy.csproj", "{5574A4F9-A9DA-429A-A1F8-3D419BDBD4F6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibrary", "..\..\ZohoProxy\ZohoCRMProxyMultiTarget\SharedLibrary\SharedLibrary.csproj", "{64F24C03-BAC9-4958-BBCE-94562A5C8891}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyobCoreProxy", "..\..\MyobProxy\MyobCoreProxy\MyobCoreProxy.csproj", "{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -17,13 +17,15 @@ namespace DataImporter.Framework.Repository
             _db = dbContext;
         }
 
-        public IEnumerable<ZohoCRMPartnerPortal> PartnerPortals => _db.PartnerPortals.AsNoTracking();
+        public IEnumerable<ZohoPartnerPortal> PartnerPortals => _db.PartnerPortals.AsNoTracking();
+        public IEnumerable<ZohoProduct> Products => _db.ZohoProducts.AsNoTracking();
 
         public IEnumerable<ZohoTableStatus> TableStatus => _db.TableStatus.AsNoTracking();
 
         public IEnumerable<ZohoBitdefender> Bitdefenders => _db.Bitdefenders.AsNoTracking();
 
         public IEnumerable<ZohoContact> Contacts => _db.Contacts.AsNoTracking();
+        public IEnumerable<ZohoAccount> Accounts => _db.Accounts.AsNoTracking();
 
         public async Task<int> AddActionLogAsync(ZohoActionLog log)
         {

@@ -20,21 +20,21 @@ namespace DataImporter.Framework
         protected string TableName;
         protected string PortalAction;
 
-        private string _loggerName;
+        protected string LoggerName;
 
         public event EventHandler<MessageEventArgs> DisplayMessage;
 
-        private void OnDisplayMessage(string message)
+        protected void OnDisplayMessage(string message)
         {
             DisplayMessage?.Invoke(this, new MessageEventArgs { Message = message });
         }
 
-        public ZohoImportBase(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
+        protected ZohoImportBase(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender)
         {
             ZohoRepository = zohoRepository;
             EmailSender = emailSender;
             DefaultRoleName = "ExternalAdmin";
-            _loggerName = "importer";
+            LoggerName = "importer";
         }
 
 
@@ -96,7 +96,7 @@ namespace DataImporter.Framework
                         Action = string.Format("[Start]:{0}", PortalAction),
                         ActionData = recordStatus.RecordID,
                         ActionResult = string.Empty,
-                        CreatedBy = _loggerName,
+                        CreatedBy = LoggerName,
                         CreatedTime = DateTime.Now,
                         Stageindicator = 1
                     });
@@ -107,7 +107,7 @@ namespace DataImporter.Framework
                     
 
                     recordStatus.PortalAction = PortalAction;
-                    recordStatus.PortalActionResult = importResult.Result;
+                    recordStatus.PortalActionResult = importResult.Message;
                     await UpdateRecordPortalActionResultAsync(recordStatus);
 
                     await ZohoRepository.AddActionLogAsync(new ZohoActionLog
@@ -115,8 +115,8 @@ namespace DataImporter.Framework
                         TableName = TableName,
                         Action = string.Format("[{0}]:{1}", importResult.IsSuccess == true ? "Finished" : "Error", PortalAction),
                         ActionData = recordStatus.RecordID,
-                        ActionResult = importResult.Result,
-                        CreatedBy = _loggerName,
+                        ActionResult = importResult.Message,
+                        CreatedBy = LoggerName,
                         CreatedTime = DateTime.Now,
                         Stageindicator = 2
                     });
@@ -125,7 +125,7 @@ namespace DataImporter.Framework
 
                     if (importResult.IsSuccess == false)
                     {
-                        await EmailSender.SendEmailAsync(string.Format("Error:{0}-{1}", TableName, PortalAction), importResult.Result);
+                        await EmailSender.SendEmailAsync(string.Format("Error:{0}-{1}", TableName, PortalAction), importResult.Message);
                     }
 
                     ct.ThrowIfCancellationRequested();
@@ -139,7 +139,7 @@ namespace DataImporter.Framework
             catch (Exception ex)
             {
                 string subject = string.Format("{0} import error", TableName);
-                await EmailSender.SendEmailAsync(subject, ex.StackTrace);
+                await EmailSender.SendEmailAsync(subject, $"{ex.Message}\r\n{ex.StackTrace} ");
 
                 //await ZohoRepository.AddActionLogAsync(new ZohoActionLog
                 //{

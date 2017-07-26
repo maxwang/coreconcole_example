@@ -13,11 +13,12 @@ namespace DataImporter.Framework.Data
         {
         }
 
-        public DbSet<ZohoCRMPartnerPortal> PartnerPortals { get; set; }
+        public DbSet<ZohoPartnerPortal> PartnerPortals { get; set; }
         public DbSet<ZohoTableStatus> TableStatus { get; set; }
 
         public DbSet<ZohoAccount> Accounts { get; set; }
         public DbSet<ZohoContact> Contacts { get; set; }
+        public DbSet<ZohoProduct> ZohoProducts { get; set; }
 
         public DbSet<ZohoActionLog> ActionLogs { get; set; }
 

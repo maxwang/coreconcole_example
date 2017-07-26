@@ -21,6 +21,7 @@ namespace DataImporter.Framework
 
         private CancellationTokenSource _cts;
         private CancellationToken _token;
+        private readonly MyobApiService _myobApiService;
 
         public event EventHandler<MessageEventArgs> DisplayMessage;
 
@@ -29,11 +30,12 @@ namespace DataImporter.Framework
             DisplayMessage?.Invoke(this, new MessageEventArgs { Message = message });
         }
 
-        public ZohoImportManager(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken)
+        public ZohoImportManager(MyobApiService myobApiProxy, IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken)
         {
             _zohoRepository = zohoRepository;
             _emailSender = emailSender;
             _zohoToken = zohoToken;
+            _myobApiService = myobApiProxy;
             _cts = new CancellationTokenSource();
             _token = _cts.Token;
         }
@@ -41,13 +43,23 @@ namespace DataImporter.Framework
         public async Task StartImportAsync()
         {
             await StartPartnerPortalImportAsync();
-            await StartBitDefenderImportAsync();
+            //await StartBitDefenderImportAsync();
+            //await StartMyobDataSynchronizationAsync();
+        }
+
+        private async Task StartMyobDataSynchronizationAsync()
+        {
+            MyobDataSynchronization importer = new MyobDataSynchronization(_myobApiService, _zohoRepository, _emailSender, _zohoToken);
+
+            importer.DisplayMessage += DisplayMessage;
+
+            await importer.ImportDataAsync(_token);
         }
 
         public async Task StartPartnerPortalImportAsync()
         {
             
-            PartnerPortalImporter importer = new PartnerPortalImporter(_zohoRepository, _emailSender, _zohoToken);
+            PartnerPortalImporter importer = new PartnerPortalImporter(_myobApiService, _zohoRepository, _emailSender, _zohoToken);
 
             importer.DisplayMessage += DisplayMessage;
 

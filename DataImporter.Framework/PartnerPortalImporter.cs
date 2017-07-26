@@ -13,19 +13,22 @@ using Microsoft.Extensions.Logging;
 using DataImporter.Framework.Extensions;
 using DataImporter.Framework.Data;
 using Microsoft.EntityFrameworkCore;
+using MyobCoreProxy.Models;
+using Newtonsoft.Json;
 using ZohoCRMProxy;
+using ZohoAccount = DataImporter.Framework.Models.ZohoAccount;
 using ZohoContact = DataImporter.Framework.Models.ZohoContact;
 
 namespace DataImporter.Framework
 {
     public class PartnerPortalImporter : ZohoImportBase
     {
+        private readonly MyobApiService _myobApiService;
+        private readonly SMSUserManager<ApplicationUser> _userManager;
+        private readonly string _tempPassword;
+        private readonly string _zohoToken;
 
-        private SMSUserManager<ApplicationUser> _userManager;
-        private string _tempPassword;
-        private string _zohoToken;
-
-        public PartnerPortalImporter(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken) : base(zohoRepository, emailSender)
+        public PartnerPortalImporter(MyobApiService apiService, IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken) : base(zohoRepository, emailSender)
         {
             TableName = "zcrm_PartnerPortal";
 
@@ -33,6 +36,7 @@ namespace DataImporter.Framework
 
             _tempPassword = "A1b2@C3d4";
             _zohoToken = zohoToken;
+            _myobApiService = apiService;
 
             var pwdValidators = new List<PasswordValidator<ApplicationUser>>();
             var pwdValidator = new PasswordValidator<ApplicationUser>();
@@ -69,7 +73,7 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Result = string.Format("Could not find partner portal record for id:{0}", id)
+                    Message = string.Format("Could not find partner portal record for id:{0}", id)
                 };
             }
 
@@ -95,9 +99,16 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Result = string.Format("Could not find partner portal admin contact:{0}", contactId)
+                    Message = string.Format("Could not find partner portal admin contact:{0}", contactId)
                 };
             }
+
+            PortalActionResult myobResult = await MyobContactCustomerDataSyncAysnc(accountId, id);
+            if (!myobResult.IsSuccess)
+            {
+                return myobResult;
+            }
+
 
             //check contact created in company
             var company = await _userManager.GetCompanyByZohoAccountIdAsync(accountId);
@@ -111,7 +122,7 @@ namespace DataImporter.Framework
                     CreatedTime = DateTime.Now
                 });
             }
-            else
+            else 
             {
                 companyId = company.Id;
             }
@@ -215,7 +226,7 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = updateResult.IsSuccess,
-                    Result = string.Format("{0}\r\n{1}", message, updateResult.Result)
+                    Message = string.Format("{0}\r\n{1}", message, updateResult.Message)
                 };
             }
             else
@@ -223,15 +234,206 @@ namespace DataImporter.Framework
                 return new PortalActionResult
                 {
                     IsSuccess = false,
-                    Result = message
+                    Message = message
                 };
 
             }
             
         }
 
+        private async Task<PortalActionResult> MyobContactCustomerDataSyncAysnc(string accountId, string partnerPortalId)
+        {
+            var account = ZohoRepository.Accounts.FirstOrDefault(x => x.AccountId == accountId);
+            if (account == null)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = string.Format($"Could not find partner account:{0}", accountId)
+                };
+            }
 
-        private PortalActionResult UpdateZohoIfNeeded(ZohoContact contact, Models.ZohoCRMPartnerPortal partnerPortal)
+            PortalActionResult result = ValidateAccount(account);
+
+            if (!result.IsSuccess)
+            {
+                return result;
+            }
+
+            var accountExist = _myobApiService.IsZohoAccountExistInMyob(account.AccountId);
+            if (accountExist)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = true
+                };
+            }
+            
+            PortalActionResult insertResult = await InsertMyobContactCustomer(account, partnerPortalId);
+
+            return insertResult;
+            
+        }
+
+        private async Task<PortalActionResult> InsertMyobContactCustomer(ZohoAccount account, string partnerPortalId)
+        {
+            Customer item = new Customer();
+
+            OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer");
+
+            await ZohoRepository.AddActionLogAsync(new ZohoActionLog
+            {
+                TableName = TableName,
+                Action = "[Start] Partner Portal Insert Myob Customer",
+                ActionData = partnerPortalId,
+                ActionResult = string.Empty,
+                CreatedBy = LoggerName,
+                CreatedTime = DateTime.Now,
+                Stageindicator = 1
+            });
+
+            item.IsIndividual = false;
+            item.IsActive = true;
+            item.CompanyName =  account.AccountName;
+            
+            item.CustomField1 = new Identifier
+            {
+                Label = "Zoho Acc UUID",
+                Value = account.AccountId
+            };
+
+            item.Addresses = new List<Address>
+            {
+                new Address
+                {
+                    Location = 1,
+                    Street = account.BillingStreet,
+                    City = account.BillingCity,
+                    State = account.BillingState,
+                    PostCode = account.BillingCode,
+                    Phone1 = account.Phone,
+                    Fax = account.Fax,
+                    Website = account.Website
+                }
+            };
+
+            var sellingDetailsOptions = _myobApiService.ContactCustomerImportOptions.SellingDetailsOptions;
+
+            item.SellingDetails = new CustomerSellingDetails
+            {
+                SaleLayout = (InvoiceLayoutType)Enum.Parse(typeof(InvoiceLayoutType),  sellingDetailsOptions.SaleLayout),
+                PrintedForm = sellingDetailsOptions.PrintedForm,
+                InvoiceDelivery = (DocumentAction)Enum.Parse(typeof(DocumentAction), sellingDetailsOptions.InvoiceDelivery),
+                ABN = account.AbnCompanyNum,
+                TaxCode = new TaxCodeLink
+                    { UID = new Guid(sellingDetailsOptions.TaxCode) },
+                FreightTaxCode = new TaxCodeLink
+                { UID = new Guid(sellingDetailsOptions.FreightTaxCode)  },
+                Terms = new CustomerTerms
+                {
+                    PaymentIsDue = (TermsPaymentType)Enum.Parse(typeof(TermsPaymentType), sellingDetailsOptions.TermsPaymentIsDue)
+                }
+            };
+            
+            var result = await _myobApiService.InsertContactCustomerAsync(item);
+
+            OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer Finished");
+
+            await ZohoRepository.AddActionLogAsync(new ZohoActionLog
+            {
+                TableName = TableName,
+                Action = "[Finish] Partner Portal Insert Myob Customer",
+                ActionData = partnerPortalId,
+                ActionResult = JsonConvert.SerializeObject(new {Request = item, Response = result}),
+                CreatedBy = LoggerName,
+                CreatedTime = DateTime.Now,
+                Stageindicator = 1
+            });
+
+            item.Uid = new Guid(result);
+
+            return new PortalActionResult
+            {
+                IsSuccess = true
+            };
+        }
+
+
+        private PortalActionResult ValidateAccount(Models.ZohoAccount account)
+        {
+            var message = new StringBuilder();
+
+            var result = new PortalActionResult
+            {
+                IsSuccess = true
+            };
+
+            if (string.IsNullOrEmpty(account.AccountName))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Account Name is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.Phone))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Phone is empty");
+            }
+            
+            if (string.IsNullOrEmpty(account.Fax))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Fax is empty");
+            }
+            
+            if (string.IsNullOrEmpty(account.Website))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Website is empty");
+            }
+
+            //
+            if (string.IsNullOrEmpty(account.BillingStreet))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Billing Street is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.BillingCity))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Billing City is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.BillingState))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Billing State is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.BillingCode))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Billing Postcode is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.BillingCountry))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Billing Country is empty");
+            }
+
+            if (string.IsNullOrEmpty(account.AbnCompanyNum))
+            {
+                result.IsSuccess = false;
+                message.AppendLine("Company ABN is empty");
+            }
+
+            result.Message = message.ToString();
+            return result;
+        }
+
+        private PortalActionResult UpdateZohoIfNeeded(ZohoContact contact, Models.ZohoPartnerPortal partnerPortal)
         {
             PortalActionResult result = new PortalActionResult();
 
@@ -286,7 +488,7 @@ namespace DataImporter.Framework
 
             if (needUpdatePartnerPortal && result.IsSuccess)
             {
-                var portal = new ZohoPartnerPortal
+                var portal = new ZohoCRMProxy.ZohoPartnerPortal
                 {
                     Id = partnerPortal.PartnerPortalID,
                     ACLCreated = true
@@ -308,7 +510,7 @@ namespace DataImporter.Framework
                 }
             }
 
-            result.Result = message.ToString();
+            result.Message = message.ToString();
 
             return result;
         }
