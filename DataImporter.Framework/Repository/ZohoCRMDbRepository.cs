@@ -37,14 +37,12 @@ namespace DataImporter.Framework.Repository
 
         public async Task<bool> UpdateTableStatusAsync(ZohoTableStatus status)
         {
-            var record = await _db.TableStatus.SingleOrDefaultAsync(x => x.TableStatusId == status.TableStatusId);
+            var record = await _db.TableStatus.FirstOrDefaultAsync(x => x.TableStatusId == status.TableStatusId);
             if(record == null)
             {
                 return false;
             }
-
-
-
+            
             record.PortalAction = status.PortalAction;
             record.PortalActionResult = status.PortalActionResult;
             record.PortalActionTime = DateTime.Now;

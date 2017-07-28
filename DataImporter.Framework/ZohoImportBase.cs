@@ -53,7 +53,7 @@ namespace DataImporter.Framework
             
             if(!string.IsNullOrEmpty(id))
             {
-                result = result.Where(x => x.RecordID.CompareTo(id) > 0);
+                result = result.Where(x => String.Compare(x.RecordID, id, StringComparison.Ordinal) > 0);
             }
 
             var results = result.OrderBy(x => x.LastActionTime);
