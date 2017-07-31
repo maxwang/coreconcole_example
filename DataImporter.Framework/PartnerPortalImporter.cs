@@ -81,7 +81,30 @@ namespace DataImporter.Framework
 
             var contactId = partnerPortal.PortalAdmin;
 
-            
+            //check User already has a PortalAdmin 
+            var count = ZohoRepository.PartnerPortals.Count(x => x.PartnerAccount == accountId);
+            if (count > 1)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = string.Format("Only allow one Portal Admin for Account :{0}", accountId)
+                };
+            }
+
+            //check only one contact should have portal admin enabled
+            var adminContact = ZohoRepository.Contacts.FirstOrDefault(x => x.AccountID == accountId && x.PortalAdmin == true);
+            if (adminContact != null)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = string.Format("Account :{0} already have a portal admin {1} ignore this update",
+                        accountId, adminContact.ContactID)
+                };
+            }
+
+
             //in ACL, we do not care about Account information, we only link Company to Account using contact id
             //var account = _zohoRepository.Accounts.FirstOrDefault(x => x.AccountID == accountId);
             //if (account == null)
