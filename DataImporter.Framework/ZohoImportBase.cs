@@ -107,7 +107,9 @@ namespace DataImporter.Framework
                     
 
                     recordStatus.PortalAction = PortalAction;
-                    recordStatus.PortalActionResult = importResult.Message;
+                    recordStatus.PortalActionResult = string.IsNullOrEmpty(importResult.Message)
+                        ? string.Empty
+                        : importResult.Message;
                     await UpdateRecordPortalActionResultAsync(recordStatus);
 
                     await ZohoRepository.AddActionLogAsync(new ZohoActionLog

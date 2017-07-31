@@ -34,7 +34,7 @@ namespace DataImporter.Framework
 
             PortalAction = "Add User and Company to ACL";
 
-            _tempPassword = "A1b2@C3d4";
+            _tempPassword = "Abcde23$";
             _zohoToken = zohoToken;
             _myobApiService = apiService;
 
