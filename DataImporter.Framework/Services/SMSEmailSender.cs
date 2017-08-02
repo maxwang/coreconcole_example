@@ -22,12 +22,44 @@ namespace DataImporter.Framework.Services
 
         public async Task SendEmailAsync(string subject, string message)
         {
-            var emailMessage = new MimeMessage();
+            await SendEmailAsync(subject, message, new List<string> {_smtpSettings.ToAddress});
+
+            //var emailMessage = new MimeMessage();
             
+            //emailMessage.From.Add(new MailboxAddress(_smtpSettings.From, _smtpSettings.FromAddress));
+            //emailMessage.To.Add(new MailboxAddress(_smtpSettings.ToAddress));
+
+
+            //emailMessage.Subject = subject;
+            //emailMessage.Body = new TextPart("plain") { Text = message };
+
+            //using (var client = new SmtpClient())
+            //{
+            //    var credentials = new NetworkCredential
+            //    {
+            //        UserName = _smtpSettings.Username, 
+            //        Password = _smtpSettings.Password 
+            //    };
+                
+            //    client.LocalDomain = _smtpSettings.LocalDomain;
+            //    await client.ConnectAsync(_smtpSettings.SMTPSeverIP, _smtpSettings.SMTPPort, SecureSocketOptions.None).ConfigureAwait(false);
+            //    await client.AuthenticateAsync(credentials);
+            //    await client.SendAsync(emailMessage).ConfigureAwait(false);
+            //    await client.DisconnectAsync(true).ConfigureAwait(false);
+            //}
+        }
+
+        public async Task SendEmailAsync(string subject, string message, IList<string> toList)
+        {
+            var emailMessage = new MimeMessage();
+
             emailMessage.From.Add(new MailboxAddress(_smtpSettings.From, _smtpSettings.FromAddress));
-            emailMessage.To.Add(new MailboxAddress(_smtpSettings.ToAddress));
 
-
+            foreach (var to in toList)
+            {
+                emailMessage.To.Add(new MailboxAddress(to));
+            }
+            
             emailMessage.Subject = subject;
             emailMessage.Body = new TextPart("plain") { Text = message };
 
@@ -35,10 +67,10 @@ namespace DataImporter.Framework.Services
             {
                 var credentials = new NetworkCredential
                 {
-                    UserName = _smtpSettings.Username, 
-                    Password = _smtpSettings.Password 
+                    UserName = _smtpSettings.Username,
+                    Password = _smtpSettings.Password
                 };
-                
+
                 client.LocalDomain = _smtpSettings.LocalDomain;
                 await client.ConnectAsync(_smtpSettings.SMTPSeverIP, _smtpSettings.SMTPPort, SecureSocketOptions.None).ConfigureAwait(false);
                 await client.AuthenticateAsync(credentials);

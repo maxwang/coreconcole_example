@@ -8,5 +8,6 @@ namespace DataImporter.Framework.Services
     public interface IEmailSender
     {
         Task SendEmailAsync(string subject, string message);
+        Task SendEmailAsync(string subject, string message, IList<string> toList);
     }
 }

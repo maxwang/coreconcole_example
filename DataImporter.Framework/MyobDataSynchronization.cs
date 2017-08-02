@@ -48,16 +48,67 @@ namespace DataImporter.Framework
                 return result;
             }
 
-            var item = await _myobApiService.GetInventoryItemByZohoProductIdAsync(product.ProductID);
+            var myobConfigurations = ZohoRepository.ZohoProductMyobConfigurations.Where(x => x.ProductId == id).ToList();
 
-            MyobInventoryItemActionResult inventoryItemResult; 
+            if (myobConfigurations == null || myobConfigurations.Count == 0)
+            {
+                return await Task.FromResult(new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"[Product:{id}]Could not find product myob configuration"
+                });
+            }
+
+
+            StringBuilder message = new StringBuilder();
+
+            foreach (var config in myobConfigurations)
+            {
+                PortalActionResult importResult = await ImportProdubtbyTaxAsync(product, config);
+                result.IsSuccess = result.IsSuccess && importResult.IsSuccess;
+                message.AppendLine(importResult.Message);
+            }
+
+            result.Message = message.ToString();
+
+
+            return result;
+
+        }
+
+        private async Task<PortalActionResult> ImportProdubtbyTaxAsync(ZohoProduct product, ZohoProductMyobConfiguration config)
+        {
+            if (!_myobApiService.ProductImportOptions.ContainsKey(config.TaxCode))
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"[Product:{product.ProductID}] {config.TaxCode} Could not find configuration"
+                };
+            }
+
+            var productImportOption = _myobApiService.ProductImportOptions[config.TaxCode];
+
+            if (!_myobApiService.MyobOptions.MyobCompanyFileOptions.ContainsKey(productImportOption.MyobCompanyFileKey))
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message = $"[Product:{product.ProductID}] {config.TaxCode} Could not find company file"
+                };
+            }
+            
+            var item = await _myobApiService.GetInventoryItemByZohoProductIdAsync(product.ProductID,
+                productImportOption.MyobCompanyFileKey);
+
+            MyobInventoryItemActionResult inventoryItemResult;
             if (item == null)
             {
-                inventoryItemResult = await CreateNewInventoryItemFromProductAsync(product);
+                inventoryItemResult = await CreateNewInventoryItemFromProductAsync(product, config, productImportOption.MyobCompanyFileKey);
             }
             else
             {
-                inventoryItemResult = await UpdateInventoryItemByProductAsync(item, product);
+                inventoryItemResult = await UpdateInventoryItemByProductAsync(item, product, config, productImportOption.MyobCompanyFileKey);
             }
 
             if (!inventoryItemResult.IsSuccess)
@@ -65,13 +116,12 @@ namespace DataImporter.Framework
                 return inventoryItemResult;
             }
 
-            return await UpdateZohoProductMyobUidIfneededAsync(inventoryItemResult, product);
-
+            return await UpdateZohoProductMyobUidIfneededAsync(inventoryItemResult, config);
         }
 
-        private async Task<PortalActionResult> UpdateZohoProductMyobUidIfneededAsync(MyobInventoryItemActionResult inventoryItemResult, ZohoProduct product)
+        private async Task<PortalActionResult> UpdateZohoProductMyobUidIfneededAsync(MyobInventoryItemActionResult inventoryItemResult, ZohoProductMyobConfiguration config)
         {
-            if (!string.IsNullOrEmpty(product.MyobUuid) && inventoryItemResult.Item.Uid == new Guid(product.MyobUuid))
+            if (!string.IsNullOrEmpty(config.MyobUuid) && inventoryItemResult.Item.Uid == new Guid(config.MyobUuid))
             {
                 return new PortalActionResult
                 {
@@ -79,13 +129,13 @@ namespace DataImporter.Framework
                 };
             }
 
-            OnDisplayMessage($"[Product:{product.ProductID}] Update Zoho Product Myob Uuid start");
+            OnDisplayMessage($"[Product:{config.ProductId}] {config.TaxCode} Update Zoho Product Myob Uuid start");
 
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
                 TableName = TableName,
                 Action = "[Start] Update Zoho Product Myob Uuid",
-                ActionData =product.ProductID,
+                ActionData = $"{config.ProductId}:{config.TaxCode}",
                 ActionResult = string.Empty,
                 CreatedBy = LoggerName,
                 CreatedTime = DateTime.Now,
@@ -94,31 +144,38 @@ namespace DataImporter.Framework
 
             var result = new PortalActionResult();
 
-            using (ZohoCRMProxy.ZohoCRMProduct request = new ZohoCRMProduct(_zohoToken))
-            {
-                try
-                {
-                    var contactResult = request.UpdateProductMyobUuid(product.ProductID, inventoryItemResult.Item.Uid.ToString());
-                    result.IsSuccess = true;
-                    result.Message = "Update Zoho Product Myob Uuid Updated.";
-                }
-                catch (Exception e)
-                {
-                    result.IsSuccess = false;
-                    result.Message = e.Message;
+            config.MyobUuid = inventoryItemResult.Item.Uid.ToString();
+            config.ModifiedTime = DateTime.Now;
+            config.ModifiedBy = LoggerName;
 
-                }
+            result.IsSuccess = await ZohoRepository.UpdateProductMyobUuidAsync(config);
 
-            }
+            //Not Uupdate Zoho, update product link table
+            //using (ZohoCRMProxy.ZohoCRMProduct request = new ZohoCRMProduct(_zohoToken))
+            //{
+            //    try
+            //    {
+            //        var contactResult = request.UpdateProductMyobUuid(product.ProductID, inventoryItemResult.Item.Uid.ToString());
+            //        result.IsSuccess = true;
+            //        result.Message = "Update Zoho Product Myob Uuid Updated.";
+            //    }
+            //    catch (Exception e)
+            //    {
+            //        result.IsSuccess = false;
+            //        result.Message = e.Message;
 
-            OnDisplayMessage($"[Product:{product.ProductID}] Update Zoho Product Myob Uuid finished");
+            //    }
+
+            //}
+
+            OnDisplayMessage($"[Product:{config.ProductId}] {config.TaxCode} Update Zoho Product Myob Uuid finished");
 
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
                 TableName = TableName,
                 Action = string.Format("[{0}] {1}", result.IsSuccess == true ? "Finished" : "Error", "Update Zoho Product Myob Uuid"),
-                ActionData = product.ProductID,
-                ActionResult = JsonConvert.SerializeObject(new { ProductId = product.ProductID, MyobUid = inventoryItemResult.Item.Uid }),
+                ActionData = config.ProductId,
+                ActionResult = JsonConvert.SerializeObject(new { ProductId = config.ProductId, TaxCode = config.TaxCode, MyobUid = inventoryItemResult.Item.Uid }),
                 CreatedBy = LoggerName,
                 CreatedTime = DateTime.Now,
                 Stageindicator = 1
@@ -127,9 +184,12 @@ namespace DataImporter.Framework
             return result;
         }
 
-        private async Task<MyobInventoryItemActionResult> UpdateInventoryItemByProductAsync(InventoryItem item, ZohoProduct product)
+        private async Task<MyobInventoryItemActionResult> UpdateInventoryItemByProductAsync(InventoryItem item, ZohoProduct product, ZohoProductMyobConfiguration config, string myobCompanyFileKey)
         {
-            OnDisplayMessage($"[Product:{product.ProductID}] Update Inventory Item start");
+            OnDisplayMessage($"[Product:{product.ProductID}] {config.TaxCode} Update Inventory Item start");
+
+            //need generate products by TAX code
+
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
                 TableName = TableName,
@@ -142,7 +202,7 @@ namespace DataImporter.Framework
             });
 
             item.Number = product.ProductCode;
-            item.Name = product.MyobNameId;
+            item.Name = config.MyobNamedId;
             item.IsActive = !string.IsNullOrEmpty(product.ProductActive) && product.ProductActive.Trim().ToLower() == "true";
 
             item.CustomField1 = new Identifier
@@ -153,7 +213,7 @@ namespace DataImporter.Framework
 
             item.IsSold = true;
 
-            var accounts = await _myobApiService.GetAccountsByDisplayIdAsync(product.MyobLinkedGl);
+            var accounts = await _myobApiService.GetAccountsByDisplayIdAsync(config.MyobLinkedGl, myobCompanyFileKey);
             var account = accounts[0];
 
             item.IncomeAccount = new AccountLink {UID = account.Uid};
@@ -163,17 +223,17 @@ namespace DataImporter.Framework
                 item.SellingDetails = new ItemSellingDetails
                 {
                     IsTaxInclusive = false,
-                    TaxCode = new TaxCodeLink {UID = new Guid(_myobApiService.ProductImportOptions.SellingTaxUid)}
+                    TaxCode = new TaxCodeLink {UID = new Guid(_myobApiService.ProductImportOptions[config.TaxCode].SellingTaxUid)}
                 };
             }
             else
             {
                 item.SellingDetails.IsTaxInclusive = false;
                 item.SellingDetails.TaxCode =
-                    new TaxCodeLink {UID = new Guid(_myobApiService.ProductImportOptions.SellingTaxUid)};
+                    new TaxCodeLink {UID = new Guid(_myobApiService.ProductImportOptions[config.TaxCode].SellingTaxUid)};
             }
 
-            var result = await _myobApiService.UpdateInventoryItemAsync(item);
+            var result = await _myobApiService.UpdateInventoryItemAsync(item, myobCompanyFileKey);
 
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
@@ -196,17 +256,17 @@ namespace DataImporter.Framework
            
         }
 
-        private async Task<MyobInventoryItemActionResult> CreateNewInventoryItemFromProductAsync(ZohoProduct product)
+        private async Task<MyobInventoryItemActionResult> CreateNewInventoryItemFromProductAsync(ZohoProduct product, ZohoProductMyobConfiguration config, string myobCompanyFileKey)
         {
             InventoryItem item = new InventoryItem();
 
-            OnDisplayMessage($"[Product:{product.ProductID}] Insert Inventory Item start");
+            OnDisplayMessage($"[Product:{product.ProductID}] {config.TaxCode} Insert Inventory Item start");
 
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
                 TableName = TableName,
                 Action = "[Start] Insert Inventory Item by Product",
-                ActionData = product.ProductID,
+                ActionData = $"Taxcode:{config.TaxCode}, ProductId:{product.ProductID}",
                 ActionResult = string.Empty,
                 CreatedBy = LoggerName,
                 CreatedTime = DateTime.Now,
@@ -214,7 +274,7 @@ namespace DataImporter.Framework
             });
 
             item.Number = product.ProductCode;
-            item.Name = product.MyobNameId;
+            item.Name = config.MyobNamedId;
             item.IsActive = !string.IsNullOrEmpty(product.ProductActive) &&
                             product.ProductActive.Trim().ToLower() == "true";
             item.CustomField1 = new Identifier
@@ -225,7 +285,7 @@ namespace DataImporter.Framework
 
             item.IsSold = true;
 
-            var accounts = await _myobApiService.GetAccountsByDisplayIdAsync(product.MyobLinkedGl);
+            var accounts = await _myobApiService.GetAccountsByDisplayIdAsync(config.MyobLinkedGl, myobCompanyFileKey);
             var account = accounts[0];
 
             item.IncomeAccount = new AccountLink {UID = account.Uid};
@@ -234,18 +294,18 @@ namespace DataImporter.Framework
             {
                 IsTaxInclusive = false,
                 TaxCode =
-                    new TaxCodeLink { UID = new Guid(_myobApiService.ProductImportOptions.SellingTaxUid) }
+                    new TaxCodeLink { UID = new Guid(_myobApiService.ProductImportOptions[config.TaxCode].SellingTaxUid) }
             };
             
 
-            var result = await _myobApiService.InsertInventoryItemAsync(item);
+            var result = await _myobApiService.InsertInventoryItemAsync(item, myobCompanyFileKey);
 
             await ZohoRepository.AddActionLogAsync(new ZohoActionLog
             {
                 TableName = TableName,
                 Action = "[Finish] Update Inventory Item by Product",
                 ActionData = product.ProductID,
-                ActionResult = result,
+                ActionResult = $"Taxcode:{config.TaxCode}, Result: {result}",
                 CreatedBy = LoggerName,
                 CreatedTime = DateTime.Now,
                 Stageindicator = 1
@@ -277,11 +337,7 @@ namespace DataImporter.Framework
                 message.AppendLine($"[product:{product.ProductID}]: prodcut code is empty");
             }
 
-            if (string.IsNullOrEmpty(product.MyobNameId))
-            {
-                result.IsSuccess = false;
-                message.AppendLine($"[product:{product.ProductID}]: myob name id is empty");
-            }
+            var configurations = await ZohoRepository.GetProductMyobConfigurations(product.ProductID);
 
             if (string.IsNullOrEmpty(product.Description))
             {
@@ -289,31 +345,48 @@ namespace DataImporter.Framework
                 message.AppendLine($"[product:{product.ProductID}]: description is empty");
             }
 
-            if (string.IsNullOrEmpty(product.MyobLinkedGl))
+            foreach (var config in configurations)
             {
-                result.IsSuccess = false;
-                message.AppendLine($"[product:{product.ProductID}]: myob linked GL is empty");
-            }
-            else
-            {
-
-                var items = await _myobApiService.GetAccountsByDisplayIdAsync(product.MyobLinkedGl);
-                if (items == null)
+                if (string.IsNullOrEmpty(config.MyobNamedId))
                 {
                     result.IsSuccess = false;
-                    message.AppendLine(
-                        $"[product:{product.ProductID}]: find more than 1  Myob GL account by displayid {product.MyobLinkedGl}");
+                    message.AppendLine($"[product:{product.ProductID}]: {config.TaxCode} myob name id is empty");
                 }
-                else
+
+                if (string.IsNullOrEmpty(config.MyobLinkedGl))
                 {
-                    if (items.Count > 1)
-                    {
-                        result.IsSuccess = false;
-                        message.AppendLine(
-                            $"[product:{product.ProductID}]: could not find Myob GL account by displayid {product.MyobLinkedGl}");
-                    }
+                    result.IsSuccess = false;
+                    message.AppendLine($"[product:{product.ProductID}]: {config.TaxCode} myob linked GL is empty");
                 }
+
             }
+            
+
+            //if (string.IsNullOrEmpty(product.MyobLinkedGl))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine($"[product:{product.ProductID}]: myob linked GL is empty");
+            //}
+            //else
+            //{
+
+            //    var items = await _myobApiService.GetAccountsByDisplayIdAsync(product.MyobLinkedGl);
+            //    if (items == null)
+            //    {
+            //        result.IsSuccess = false;
+            //        message.AppendLine(
+            //            $"[product:{product.ProductID}]: find more than 1  Myob GL account by displayid {product.MyobLinkedGl}");
+            //    }
+            //    else
+            //    {
+            //        if (items.Count > 1)
+            //        {
+            //            result.IsSuccess = false;
+            //            message.AppendLine(
+            //                $"[product:{product.ProductID}]: could not find Myob GL account by displayid {product.MyobLinkedGl}");
+            //        }
+            //    }
+            //}
 
             result.Message = message.ToString();
 

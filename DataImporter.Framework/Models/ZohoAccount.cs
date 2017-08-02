@@ -25,7 +25,7 @@ namespace DataImporter.Framework.Models
 
         [Column("AccountOwnerID")]
         public string AccountOwnerId { get; set; }
-        
+
         public string AccountSite { get; set; }
         public string AccountType { get; set; }
         public double? AnnualRevenue { get; set; }
@@ -51,7 +51,7 @@ namespace DataImporter.Framework.Models
         public double? ExchangeRate { get; set; }
         public string Facebook { get; set; }
         public string Fax { get; set; }
-        
+
         public string GooglePlus { get; set; }
         public string IndustriesServiced { get; set; }
         public string Industry { get; set; }
@@ -59,7 +59,7 @@ namespace DataImporter.Framework.Models
 
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm:ss}")]
         public DateTime LastActivityTime { get; set; }
-        
+
 
         public string Layout { get; set; }
 
@@ -67,7 +67,7 @@ namespace DataImporter.Framework.Models
 
         [DisplayFormat(DataFormatString = "{0:dd/MM/yyyy HH:mm:ss}")]
         public DateTime ModifiedTime { get; set; }
-        
+
         public int NegativeScore { get; set; }
         public int NegativeTouchPointScore { get; set; }
         public string NoofEmployees { get; set; }
@@ -92,5 +92,12 @@ namespace DataImporter.Framework.Models
         public int TouchPointScore { get; set; }
         public string VendorStatus { get; set; }
         public string Website { get; set; }
+
+        public string LegalCompanyName { get; set; }
+        public string MyobDataFile { get; set; }
+        public string RelatedDistributorId { get; set; }
+        public string CompanyEmail { get; set; }
+
+
     }
 }

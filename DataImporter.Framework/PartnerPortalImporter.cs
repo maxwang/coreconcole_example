@@ -133,6 +133,15 @@ namespace DataImporter.Framework
             }
 
 
+            var subject = myobResult.IsSuccess
+                ? $"[Account:{accountId}] added to Myob"
+                : $"[Account:{accountId}] could not add to Myob";
+
+            var tos = _myobApiService.SalesEmail.Split(new char[] {';'}).ToList();
+            var body = string.IsNullOrEmpty(myobResult.Message) ? "Success" : myobResult.Message;
+
+            await EmailSender.SendEmailAsync(subject, body, tos);
+
             //check contact created in company
             var company = await _userManager.GetCompanyByZohoAccountIdAsync(accountId);
             int companyId;
@@ -283,12 +292,13 @@ namespace DataImporter.Framework
                 return result;
             }
 
-            var accountExist = _myobApiService.IsZohoAccountExistInMyob(account.AccountId);
+            var accountExist = _myobApiService.IsZohoAccountExistInMyob(account.AccountId, account.MyobDataFile);
             if (accountExist)
             {
                 return new PortalActionResult
                 {
-                    IsSuccess = true
+                    IsSuccess = true,
+                    Message = $"[Account:{account.AccountId}]: {account.AccountName} already exist in Myob"
                 };
             }
             
@@ -308,7 +318,7 @@ namespace DataImporter.Framework
             {
                 TableName = TableName,
                 Action = "[Start] Partner Portal Insert Myob Customer",
-                ActionData = partnerPortalId,
+                ActionData = account.AccountId,
                 ActionResult = string.Empty,
                 CreatedBy = LoggerName,
                 CreatedTime = DateTime.Now,
@@ -336,11 +346,12 @@ namespace DataImporter.Framework
                     PostCode = account.BillingCode,
                     Phone1 = account.Phone,
                     Fax = account.Fax,
+                    Email = account.CompanyEmail,
                     Website = account.Website
                 }
             };
 
-            var sellingDetailsOptions = _myobApiService.ContactCustomerImportOptions.SellingDetailsOptions;
+            var sellingDetailsOptions = _myobApiService.ContactCustomerImportOptions[account.MyobDataFile].SellingDetailsOptions;
 
             item.SellingDetails = new CustomerSellingDetails
             {
@@ -352,13 +363,14 @@ namespace DataImporter.Framework
                     { UID = new Guid(sellingDetailsOptions.TaxCode) },
                 FreightTaxCode = new TaxCodeLink
                 { UID = new Guid(sellingDetailsOptions.FreightTaxCode)  },
+                UseCustomerTaxCode = true,
                 Terms = new CustomerTerms
                 {
                     PaymentIsDue = (TermsPaymentType)Enum.Parse(typeof(TermsPaymentType), sellingDetailsOptions.TermsPaymentIsDue)
                 }
             };
             
-            var result = await _myobApiService.InsertContactCustomerAsync(item);
+            var result = await _myobApiService.InsertContactCustomerAsync(item, account.MyobDataFile);
 
             OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer Finished");
 
@@ -403,17 +415,17 @@ namespace DataImporter.Framework
                 message.AppendLine("Phone is empty");
             }
             
-            if (string.IsNullOrEmpty(account.Fax))
-            {
-                result.IsSuccess = false;
-                message.AppendLine("Fax is empty");
-            }
+            //if (string.IsNullOrEmpty(account.Fax))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine("Fax is empty");
+            //}
             
-            if (string.IsNullOrEmpty(account.Website))
-            {
-                result.IsSuccess = false;
-                message.AppendLine("Website is empty");
-            }
+            //if (string.IsNullOrEmpty(account.Website))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine("Website is empty");
+            //}
 
             //
             if (string.IsNullOrEmpty(account.BillingStreet))
@@ -446,11 +458,26 @@ namespace DataImporter.Framework
                 message.AppendLine("Billing Country is empty");
             }
 
-            if (string.IsNullOrEmpty(account.AbnCompanyNum))
+            //if (string.IsNullOrEmpty(account.AbnCompanyNum))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine("Company ABN is empty");
+            //}
+
+            if (string.IsNullOrEmpty(account.MyobDataFile) ||
+                !_myobApiService.MyobOptions.MyobCompanyFileOptions.ContainsKey(account.MyobDataFile))
             {
                 result.IsSuccess = false;
-                message.AppendLine("Company ABN is empty");
+                message.AppendLine($"Account {account.AccountId} myob Data file {account.MyobDataFile} mapping not exist");
             }
+
+            if (string.IsNullOrEmpty(account.MyobDataFile) ||
+                !_myobApiService.ContactCustomerImportOptions.ContainsKey(account.MyobDataFile))
+            {
+                result.IsSuccess = false;
+                message.AppendLine($"Account {account.AccountId} myob Contact Customer options {account.MyobDataFile} not exist");
+            }
+
 
             result.Message = message.ToString();
             return result;

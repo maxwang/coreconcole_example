@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <Configuration>Release</Configuration>
     <TargetFramework>netcoreapp1.1</TargetFramework>
   </PropertyGroup>
 

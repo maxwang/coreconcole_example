@@ -15,9 +15,13 @@ namespace DataImporter.Framework.Services
     {
         private MyobImportOptions _myobImportOptions;
 
-        public ProductImport ProductImportOptions => _myobImportOptions.ProductImport;
+        public Dictionary<string, ProductImport> ProductImportOptions => _myobImportOptions.ProductImport;
 
-        public ContactCustomerImportOptions ContactCustomerImportOptions => _myobImportOptions.ContactCustomerImportOptions;
+        public Dictionary<string, ContactCustomerImportOptions> ContactCustomerImportOptions => _myobImportOptions.ContactCustomerImportOptions;
+
+        public MyobOptions MyobOptions => _myobImportOptions.MyobOptions;
+
+        public string SalesEmail => _myobImportOptions.SalesEmail;
 
         public MyobApiService(IOptions<MyobImportOptions> options)
         {
@@ -29,18 +33,18 @@ namespace DataImporter.Framework.Services
             return string.Empty;
         }
 
-        public bool IsZohoAccountExistInMyob(string zohoAccountUuid)
+        public bool IsZohoAccountExistInMyob(string zohoAccountUuid, string companyFileKey)
         {
-            using (CustomerService service = new CustomerService(_myobImportOptions.MyobOptions))
+            using (CustomerService service = new CustomerService(_myobImportOptions.MyobOptions, companyFileKey))
             {
                 var customers = service.FilterByZohoAccountUuid(zohoAccountUuid);
                 return customers?.Count > 0;
             }
         }
 
-        public async Task<InventoryItem> GetInventoryItemByZohoProductIdAsync(string productUuid)
+        public async Task<InventoryItem> GetInventoryItemByZohoProductIdAsync(string productUuid, string companyFileKey)
         {
-            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions))
+            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions,companyFileKey))
             {
 
                 var items = await service.FilterByZohoProductUuidAsync(productUuid);
@@ -48,17 +52,17 @@ namespace DataImporter.Framework.Services
             }
         }
 
-        public async Task<List<Account>> GetAccountsByDisplayIdAsync(string displayId)
+        public async Task<List<Account>> GetAccountsByDisplayIdAsync(string displayId,string companyFileKey)
         {
-            using (AccountService service = new AccountService(_myobImportOptions.MyobOptions))
+            using (AccountService service = new AccountService(_myobImportOptions.MyobOptions, companyFileKey))
             {
                 return await service.FilterByDisplayIdAsync(displayId);
             }
         }
 
-        public bool IsZohoProductExistInMyob(string productUuid)
+        public bool IsZohoProductExistInMyob(string productUuid, string companyFileKey)
         {
-            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions))
+            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions, companyFileKey))
             {
 
                 var items = service.FilterByZohoProductUuid(productUuid);
@@ -66,25 +70,25 @@ namespace DataImporter.Framework.Services
             }
         }
 
-        public async Task<string> UpdateInventoryItemAsync(InventoryItem item)
+        public async Task<string> UpdateInventoryItemAsync(InventoryItem item, string companyFileKey)
         {
-            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions))
+            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions, companyFileKey))
             {
                 return await service.UpdateAsync(item);
             }
         }
 
-        public async Task<string> InsertInventoryItemAsync(InventoryItem item)
+        public async Task<string> InsertInventoryItemAsync(InventoryItem item, string companyFileKey)
         {
-            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions))
+            using (InventoryItemService service = new InventoryItemService(_myobImportOptions.MyobOptions, companyFileKey))
             {
                 return await service.InsertAsync(item);
             }
         }
 
-        public async Task<string> InsertContactCustomerAsync(Customer item)
+        public async Task<string> InsertContactCustomerAsync(Customer item, string companyFileKey)
         {
-            using (CustomerService service = new CustomerService(_myobImportOptions.MyobOptions))
+            using (CustomerService service = new CustomerService(_myobImportOptions.MyobOptions, companyFileKey))
             {
                 return await service.InsertAsync(item);
             }

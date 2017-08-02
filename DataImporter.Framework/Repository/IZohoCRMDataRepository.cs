@@ -14,8 +14,11 @@ namespace DataImporter.Framework.Repository
         IEnumerable<ZohoAccount> Accounts { get; }
         IEnumerable<ZohoBitdefender> Bitdefenders { get; }
         IEnumerable<ZohoProduct> Products { get; }
+        IEnumerable<ZohoProductMyobConfiguration> ZohoProductMyobConfigurations { get; }
 
+        Task<IList<ZohoProductMyobConfiguration>> GetProductMyobConfigurations(string productId);
         Task<bool> UpdateTableStatusAsync(ZohoTableStatus status);
+        Task<bool> UpdateProductMyobUuidAsync(ZohoProductMyobConfiguration config);
 
         Task<int> AddActionLogAsync(ZohoActionLog log);
         

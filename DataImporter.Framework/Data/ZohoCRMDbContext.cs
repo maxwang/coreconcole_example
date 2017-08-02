@@ -23,5 +23,6 @@ namespace DataImporter.Framework.Data
         public DbSet<ZohoActionLog> ActionLogs { get; set; }
 
         public DbSet<ZohoBitdefender> Bitdefenders { get; set; }
+        public DbSet<ZohoProductMyobConfiguration> ZohoProductMyobConfigurations { get; set; }
     }
 }

@@ -23,11 +23,13 @@ namespace DataImporter.Framework.Services
     public class ProductImport
     {
         public string SellingTaxUid { get; set; }
+        public string MyobCompanyFileKey { get; set; }
     }
     public class MyobImportOptions
     {
+        public string SalesEmail { get; set; }
         public MyobOptions MyobOptions { get; set; }
-        public ProductImport ProductImport { get; set; }
-        public ContactCustomerImportOptions ContactCustomerImportOptions { get; set; }
+        public Dictionary<string, ProductImport> ProductImport { get; set; }
+        public Dictionary<string, ContactCustomerImportOptions> ContactCustomerImportOptions { get; set; }
     }
 }
