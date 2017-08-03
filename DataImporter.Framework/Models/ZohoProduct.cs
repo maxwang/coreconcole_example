@@ -52,10 +52,10 @@ namespace DataImporter.Framework.Models
         public string PANOrderType { get; set; }
         public string RenewalSKU { get; set; }
 
-        public string MyobUuid { get; set; }
+        //public string MyobUuid { get; set; }
 
-        public string MyobLinkedGl { get; set; }
+        //public string MyobLinkedGl { get; set; }
 
-        public string MyobNameId { get; set; }
+        //public string MyobNameId { get; set; }
     }
 }
