@@ -11,11 +11,17 @@ using System.Threading;
 using DataImporter.Framework.Models;
 using DataImporter.Framework.Extensions;
 using Website.Extensions;
+using Microsoft.Extensions.Logging;
+using NLog;
 
 namespace ZohoImporter
 {
+    
+
     class Program
     {
+        private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+
         static void Main(string[] args)
         {
             var environmentName = Environment.GetEnvironmentVariable("CORE_ENVIRONMENT");
@@ -133,6 +139,7 @@ namespace ZohoImporter
 
         private static void DisplayMessage(string message)
         {
+            Logger.Info(message);
             Console.WriteLine("[{0:yyyy MM dd HH:mm:ss}]: {1}", DateTime.Now, message);
         }
 
