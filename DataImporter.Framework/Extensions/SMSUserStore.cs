@@ -17,7 +17,14 @@ namespace DataImporter.Framework.Extensions
         {
             
         }
-        
+
+        public async Task<List<ApplicationUser>> GetApplicationUsersByCompanyId(int companyId)
+        {
+            var aContext = Context as ACLDbContext;
+            return await (from u in aContext.Users
+                where u.CompanyId == companyId
+                select u).ToListAsync();
+        }
 
         public async Task<IList<string>> GetUserRolesAsync(string userId)
         {

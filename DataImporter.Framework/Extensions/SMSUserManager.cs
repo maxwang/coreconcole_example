@@ -143,6 +143,12 @@ namespace Website.Extensions
             return await uStore.CreateUserZohoContactAsync(userContact);
         }
 
+        public async Task<List<ApplicationUser>> GetApplicationUsersByCompanyId(int companyId)
+        {
+            var uStore = Store as SMSUserStore<ApplicationUser>;
+            return await uStore.GetApplicationUsersByCompanyId(companyId);
+        }
+
 
     }
 }
