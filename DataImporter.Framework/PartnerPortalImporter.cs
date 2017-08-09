@@ -361,6 +361,7 @@ namespace DataImporter.Framework
                     City = account.BillingCity,
                     State = account.BillingState,
                     PostCode = account.BillingCode,
+                    Country = account.BillingCountry,
                     Phone1 = account.Phone,
                     Fax = account.Fax,
                     Email = account.CompanyEmail,
