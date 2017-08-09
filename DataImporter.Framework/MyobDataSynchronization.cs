@@ -220,6 +220,9 @@ namespace DataImporter.Framework
             item.Name = config.MyobNamedId;
             item.IsActive = !string.IsNullOrEmpty(product.ProductActive) && product.ProductActive.Trim().ToLower() == "true";
 
+            item.Description = product.Description;
+            item.UseDescription = true;
+
             item.CustomField1 = new Identifier
             {
                 Label = "Zoho Product UUID",
@@ -292,6 +295,10 @@ namespace DataImporter.Framework
             item.Name = config.MyobNamedId;
             item.IsActive = !string.IsNullOrEmpty(product.ProductActive) &&
                             product.ProductActive.Trim().ToLower() == "true";
+
+            item.Description = product.Description;
+            item.UseDescription = true;
+
             item.CustomField1 = new Identifier
             {
                 Label = "Zoho Product UUID",
