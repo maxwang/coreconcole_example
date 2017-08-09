@@ -87,6 +87,9 @@ namespace DataImporter.Framework
                 };
             }
 
+            
+
+
             var productImportOption = _myobApiService.ProductImportOptions[config.TaxCode];
 
             if (!_myobApiService.MyobOptions.MyobCompanyFileOptions.ContainsKey(productImportOption.MyobCompanyFileKey))
@@ -97,7 +100,19 @@ namespace DataImporter.Framework
                     Message = $"[Product:{product.ProductID}] {config.TaxCode} Could not find company file"
                 };
             }
-            
+
+            //need double check config GL account exist or not
+            var accounts = await _myobApiService.GetAccountsByDisplayIdAsync(config.MyobLinkedGl, productImportOption.MyobCompanyFileKey);
+            if (accounts == null || accounts.Count < 1)
+            {
+                return new PortalActionResult
+                {
+                    IsSuccess = false,
+                    Message =
+                        $"[Product:{product.ProductID}] {config.TaxCode} Could not find Myob Linked Gl Account: {config.MyobLinkedGl}"
+                };
+            }
+
             var item = await _myobApiService.GetInventoryItemByZohoProductIdAsync(product.ProductID,
                 productImportOption.MyobCompanyFileKey);
 
@@ -343,6 +358,12 @@ namespace DataImporter.Framework
             {
                 result.IsSuccess = false;
                 message.AppendLine($"[product:{product.ProductID}]: description is empty");
+            }
+
+            if (configurations == null || configurations.Count < 1)
+            {
+                result.IsSuccess = false;
+                message.AppendLine($"[product:{product.ProductID}]: Could not find product Myob configuration");
             }
 
             foreach (var config in configurations)
