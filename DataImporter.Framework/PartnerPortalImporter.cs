@@ -13,11 +13,11 @@ using Microsoft.Extensions.Logging;
 using DataImporter.Framework.Extensions;
 using DataImporter.Framework.Data;
 using Microsoft.EntityFrameworkCore;
-using MyobCoreProxy.Models;
 using Newtonsoft.Json;
 using ZohoCRMProxy;
 using ZohoAccount = DataImporter.Framework.Models.ZohoAccount;
 using ZohoContact = DataImporter.Framework.Models.ZohoContact;
+using MyobProxy.Models;
 
 namespace DataImporter.Framework
 {

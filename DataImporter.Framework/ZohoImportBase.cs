@@ -140,8 +140,12 @@ namespace DataImporter.Framework
             }
             catch (Exception ex)
             {
+                var message = new StringBuilder();
+                message.AppendLine($"{ex.Message}\r\n{ex.StackTrace}");
+                if (ex.InnerException != null)
+                    message.Append($"\r\n{ex.InnerException.Message}\r\n {ex.InnerException.StackTrace}");
                 string subject = string.Format("{0} import error", TableName);
-                await EmailSender.SendEmailAsync(subject, $"{ex.Message}\r\n{ex.StackTrace} ");
+                await EmailSender.SendEmailAsync(subject, message.ToString());
 
                 //await ZohoRepository.AddActionLogAsync(new ZohoActionLog
                 //{

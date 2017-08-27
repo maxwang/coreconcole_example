@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
-using MyobCoreProxy.Models;
+using MyobProxy.Models;
 
 namespace DataImporter.Framework.Models
 {

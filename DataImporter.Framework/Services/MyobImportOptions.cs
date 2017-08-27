@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
-using MyobCoreProxy;
+using MyobProxy;
 
 namespace DataImporter.Framework.Services
 {

@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using DataImporter.Framework.Models;
 using DataImporter.Framework.Repository;
 using DataImporter.Framework.Services;
-using MyobCoreProxy.Models;
+using MyobProxy.Models;
 using Newtonsoft.Json;
 using ZohoCRMProxy;
 using ZohoProduct = DataImporter.Framework.Models.ZohoProduct;
@@ -64,7 +64,7 @@ namespace DataImporter.Framework
 
             foreach (var config in myobConfigurations)
             {
-                PortalActionResult importResult = await ImportProdubtbyTaxAsync(product, config);
+                PortalActionResult importResult = await ImportProductbyTaxAsync(product, config);
                 result.IsSuccess = result.IsSuccess && importResult.IsSuccess;
                 message.AppendLine(importResult.Message);
             }
@@ -76,7 +76,7 @@ namespace DataImporter.Framework
 
         }
 
-        private async Task<PortalActionResult> ImportProdubtbyTaxAsync(ZohoProduct product, ZohoProductMyobConfiguration config)
+        private async Task<PortalActionResult> ImportProductbyTaxAsync(ZohoProduct product, ZohoProductMyobConfiguration config)
         {
             if (!_myobApiService.ProductImportOptions.ContainsKey(config.TaxCode))
             {
