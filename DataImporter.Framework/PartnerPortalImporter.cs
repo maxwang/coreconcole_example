@@ -17,18 +17,17 @@ using Newtonsoft.Json;
 using ZohoCRMProxy;
 using ZohoAccount = DataImporter.Framework.Models.ZohoAccount;
 using ZohoContact = DataImporter.Framework.Models.ZohoContact;
-using MyobProxy.Models;
 
 namespace DataImporter.Framework
 {
     public class PartnerPortalImporter : ZohoImportBase
     {
-        private readonly MyobApiService _myobApiService;
+        
         private readonly SMSUserManager<ApplicationUser> _userManager;
         private readonly string _tempPassword;
         private readonly string _zohoToken;
 
-        public PartnerPortalImporter(MyobApiService apiService, IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken) : base(zohoRepository, emailSender)
+        public PartnerPortalImporter(IZohoCRMDataRepository zohoRepository, IEmailSender emailSender, string zohoToken) : base(zohoRepository, emailSender)
         {
             TableName = "zcrm_PartnerPortal";
 
@@ -36,7 +35,7 @@ namespace DataImporter.Framework
 
             _tempPassword = "Abcde23$";
             _zohoToken = zohoToken;
-            _myobApiService = apiService;
+            
 
             var pwdValidators = new List<PasswordValidator<ApplicationUser>>();
             var pwdValidator = new PasswordValidator<ApplicationUser>();
@@ -86,22 +85,22 @@ namespace DataImporter.Framework
 
             var contactId = partnerPortal.PortalAdmin;
 
-            PortalActionResult myobResult = await MyobContactCustomerDataSyncAysnc(accountId, id);
-            if (!myobResult.IsSuccess)
-            {
-                return myobResult;
-            }
+            //PortalActionResult myobResult = await MyobContactCustomerDataSyncAysnc(accountId, id);
+            //if (!myobResult.IsSuccess)
+            //{
+            //    return myobResult;
+            //}
 
 
-            var subject = myobResult.IsSuccess
-                ? $"[Account:{accountId}] added to Myob"
-                : $"[Account:{accountId}] could not add to Myob";
+            //var subject = myobResult.IsSuccess
+            //    ? $"[Account:{accountId}] added to Myob"
+            //    : $"[Account:{accountId}] could not add to Myob";
 
-            var tos = _myobApiService.SalesEmail.Split(new char[] { ';' }).ToList();
-            var body = string.IsNullOrEmpty(myobResult.Message) ? "Success" : myobResult.Message;
+            //var tos = _myobApiService.SalesEmail.Split(new char[] { ';' }).ToList();
+            //var body = string.IsNullOrEmpty(myobResult.Message) ? "Success" : myobResult.Message;
 
-            //do not need wait for email result
-            EmailSender.SendEmailAsync(subject, body, tos);
+            ////do not need wait for email result
+            //EmailSender.SendEmailAsync(subject, body, tos);
 
 
             //check contact created in company
@@ -290,126 +289,129 @@ namespace DataImporter.Framework
         }
 
 
-        private async Task<PortalActionResult> MyobContactCustomerDataSyncAysnc(string accountId, string partnerPortalId)
-        {
-            var account = ZohoRepository.Accounts.FirstOrDefault(x => x.AccountId == accountId);
-            if (account == null)
-            {
-                return new PortalActionResult
-                {
-                    IsSuccess = false,
-                    Message = string.Format($"Could not find partner account:{0}", accountId)
-                };
-            }
+        //private async Task<PortalActionResult> MyobContactCustomerDataSyncAysnc(string accountId, string partnerPortalId)
+        //{
+        //    var account = ZohoRepository.Accounts.FirstOrDefault(x => x.AccountId == accountId);
+        //    if (account == null)
+        //    {
+        //        return new PortalActionResult
+        //        {
+        //            IsSuccess = false,
+        //            Message = string.Format($"Could not find partner account:{0}", accountId)
+        //        };
+        //    }
 
-            PortalActionResult result = ValidateAccount(account);
+        //    PortalActionResult result = ValidateAccount(account);
 
-            if (!result.IsSuccess)
-            {
-                return result;
-            }
+        //    if (!result.IsSuccess)
+        //    {
+        //        return result;
+        //    }
 
-            var accountExist = _myobApiService.IsZohoAccountExistInMyob(account.AccountId, account.MyobDataFile);
-            if (accountExist)
-            {
-                return new PortalActionResult
-                {
-                    IsSuccess = true,
-                    Message = $"[Account:{account.AccountId}]: {account.AccountName} already exist in Myob"
-                };
-            }
+        //    var accountExist = _myobApiService.IsZohoAccountExistInMyob(account.AccountId, account.MyobDataFile);
+        //    if (accountExist)
+        //    {
+        //        return new PortalActionResult
+        //        {
+        //            IsSuccess = true,
+        //            Message = $"[Account:{account.AccountId}]: {account.AccountName} already exist in Myob"
+        //        };
+        //    }
 
-            PortalActionResult insertResult = await InsertMyobContactCustomer(account, partnerPortalId);
+        //    //PortalActionResult insertResult = await InsertMyobContactCustomer(account, partnerPortalId);
 
-            return insertResult;
+        //    return new PortalActionResult
+        //    {
+        //        IsSuccess = true
+        //    };
+            
+        //}
 
-        }
+        //private async Task<PortalActionResult> InsertMyobContactCustomer(ZohoAccount account, string partnerPortalId)
+        //{
+        //    Customer item = new Customer();
 
-        private async Task<PortalActionResult> InsertMyobContactCustomer(ZohoAccount account, string partnerPortalId)
-        {
-            Customer item = new Customer();
+        //    OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer");
 
-            OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer");
+        //    await ZohoRepository.AddActionLogAsync(new ZohoActionLog
+        //    {
+        //        TableName = TableName,
+        //        Action = "[Start] Partner Portal Insert Myob Customer",
+        //        ActionData = account.AccountId,
+        //        ActionResult = string.Empty,
+        //        CreatedBy = LoggerName,
+        //        CreatedTime = DateTime.Now,
+        //        Stageindicator = 1
+        //    });
 
-            await ZohoRepository.AddActionLogAsync(new ZohoActionLog
-            {
-                TableName = TableName,
-                Action = "[Start] Partner Portal Insert Myob Customer",
-                ActionData = account.AccountId,
-                ActionResult = string.Empty,
-                CreatedBy = LoggerName,
-                CreatedTime = DateTime.Now,
-                Stageindicator = 1
-            });
+        //    item.IsIndividual = false;
+        //    item.IsActive = true;
+        //    item.CompanyName = account.AccountName;
 
-            item.IsIndividual = false;
-            item.IsActive = true;
-            item.CompanyName = account.AccountName;
+        //    item.CustomField1 = new Identifier
+        //    {
+        //        Label = "Zoho Acc UUID",
+        //        Value = account.AccountId
+        //    };
 
-            item.CustomField1 = new Identifier
-            {
-                Label = "Zoho Acc UUID",
-                Value = account.AccountId
-            };
+        //    item.Addresses = new List<Address>
+        //    {
+        //        new Address
+        //        {
+        //            Location = 1,
+        //            Street = account.BillingStreet,
+        //            City = account.BillingCity,
+        //            State = account.BillingState,
+        //            PostCode = account.BillingCode,
+        //            Country = account.BillingCountry,
+        //            Phone1 = account.Phone,
+        //            Fax = account.Fax,
+        //            Email = account.CompanyEmail,
+        //            Website = account.Website
+        //        }
+        //    };
 
-            item.Addresses = new List<Address>
-            {
-                new Address
-                {
-                    Location = 1,
-                    Street = account.BillingStreet,
-                    City = account.BillingCity,
-                    State = account.BillingState,
-                    PostCode = account.BillingCode,
-                    Country = account.BillingCountry,
-                    Phone1 = account.Phone,
-                    Fax = account.Fax,
-                    Email = account.CompanyEmail,
-                    Website = account.Website
-                }
-            };
+        //    var sellingDetailsOptions = _myobApiService.ContactCustomerImportOptions[account.MyobDataFile].SellingDetailsOptions;
 
-            var sellingDetailsOptions = _myobApiService.ContactCustomerImportOptions[account.MyobDataFile].SellingDetailsOptions;
+        //    item.SellingDetails = new CustomerSellingDetails
+        //    {
+        //        SaleLayout = (InvoiceLayoutType)Enum.Parse(typeof(InvoiceLayoutType), sellingDetailsOptions.SaleLayout),
+        //        PrintedForm = sellingDetailsOptions.PrintedForm,
+        //        InvoiceDelivery = (DocumentAction)Enum.Parse(typeof(DocumentAction), sellingDetailsOptions.InvoiceDelivery),
+        //        ABN = account.AbnCompanyNum,
+        //        TaxCode = new TaxCodeLink
+        //        { UID = new Guid(sellingDetailsOptions.TaxCode) },
+        //        FreightTaxCode = new TaxCodeLink
+        //        { UID = new Guid(sellingDetailsOptions.FreightTaxCode) },
+        //        UseCustomerTaxCode = true,
+        //        Terms = new CustomerTerms
+        //        {
+        //            PaymentIsDue = (TermsPaymentType)Enum.Parse(typeof(TermsPaymentType), sellingDetailsOptions.TermsPaymentIsDue)
+        //        }
+        //    };
 
-            item.SellingDetails = new CustomerSellingDetails
-            {
-                SaleLayout = (InvoiceLayoutType)Enum.Parse(typeof(InvoiceLayoutType), sellingDetailsOptions.SaleLayout),
-                PrintedForm = sellingDetailsOptions.PrintedForm,
-                InvoiceDelivery = (DocumentAction)Enum.Parse(typeof(DocumentAction), sellingDetailsOptions.InvoiceDelivery),
-                ABN = account.AbnCompanyNum,
-                TaxCode = new TaxCodeLink
-                { UID = new Guid(sellingDetailsOptions.TaxCode) },
-                FreightTaxCode = new TaxCodeLink
-                { UID = new Guid(sellingDetailsOptions.FreightTaxCode) },
-                UseCustomerTaxCode = true,
-                Terms = new CustomerTerms
-                {
-                    PaymentIsDue = (TermsPaymentType)Enum.Parse(typeof(TermsPaymentType), sellingDetailsOptions.TermsPaymentIsDue)
-                }
-            };
+        //    var result = await _myobApiService.InsertContactCustomerAsync(item, account.MyobDataFile);
 
-            var result = await _myobApiService.InsertContactCustomerAsync(item, account.MyobDataFile);
+        //    OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer Finished");
 
-            OnDisplayMessage($"[PartnerPortal:{partnerPortalId}] Insert Myob Contact->Customer Finished");
+        //    await ZohoRepository.AddActionLogAsync(new ZohoActionLog
+        //    {
+        //        TableName = TableName,
+        //        Action = "[Finish] Partner Portal Insert Myob Customer",
+        //        ActionData = partnerPortalId,
+        //        ActionResult = JsonConvert.SerializeObject(new { Request = item, Response = result }),
+        //        CreatedBy = LoggerName,
+        //        CreatedTime = DateTime.Now,
+        //        Stageindicator = 1
+        //    });
 
-            await ZohoRepository.AddActionLogAsync(new ZohoActionLog
-            {
-                TableName = TableName,
-                Action = "[Finish] Partner Portal Insert Myob Customer",
-                ActionData = partnerPortalId,
-                ActionResult = JsonConvert.SerializeObject(new { Request = item, Response = result }),
-                CreatedBy = LoggerName,
-                CreatedTime = DateTime.Now,
-                Stageindicator = 1
-            });
+        //    item.Uid = new Guid(result);
 
-            item.Uid = new Guid(result);
-
-            return new PortalActionResult
-            {
-                IsSuccess = true
-            };
-        }
+        //    return new PortalActionResult
+        //    {
+        //        IsSuccess = true
+        //    };
+        //}
 
         private async Task<string> ValidatePartnerPortalAsync(string partnerPortalId)
         {
@@ -567,19 +569,19 @@ namespace DataImporter.Framework
             //    message.AppendLine("Company ABN is empty");
             //}
 
-            if (string.IsNullOrEmpty(account.MyobDataFile) ||
-                !_myobApiService.MyobOptions.MyobCompanyFileOptions.ContainsKey(account.MyobDataFile))
-            {
-                result.IsSuccess = false;
-                message.AppendLine($"Account {account.AccountId} myob Data file {account.MyobDataFile} mapping not exist");
-            }
+            //if (string.IsNullOrEmpty(account.MyobDataFile) ||
+            //    !_myobApiService.MyobOptions.MyobCompanyFileOptions.ContainsKey(account.MyobDataFile))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine($"Account {account.AccountId} myob Data file {account.MyobDataFile} mapping not exist");
+            //}
 
-            if (string.IsNullOrEmpty(account.MyobDataFile) ||
-                !_myobApiService.ContactCustomerImportOptions.ContainsKey(account.MyobDataFile))
-            {
-                result.IsSuccess = false;
-                message.AppendLine($"Account {account.AccountId} myob Contact Customer options {account.MyobDataFile} not exist");
-            }
+            //if (string.IsNullOrEmpty(account.MyobDataFile) ||
+            //    !_myobApiService.ContactCustomerImportOptions.ContainsKey(account.MyobDataFile))
+            //{
+            //    result.IsSuccess = false;
+            //    message.AppendLine($"Account {account.AccountId} myob Contact Customer options {account.MyobDataFile} not exist");
+            //}
 
 
             result.Message = message.ToString();
@@ -597,6 +599,8 @@ namespace DataImporter.Framework
             var needUpdateContact = true;
             var needUpdatePartnerPortal = true;
             var needUpdateOldContact = false;
+            //var needUpdateAccount = false;
+
 
             ZohoContact zohoOldAdminContact = null;
 
@@ -622,7 +626,34 @@ namespace DataImporter.Framework
                 message.AppendLine("Portal Portal ACL Created is true in Database, ignore update");
             }
 
-            if (needUpdateContact || needUpdateOldContact)
+
+            var account = ZohoRepository.Accounts.FirstOrDefault(x => x.AccountId == partnerPortal.PartnerAccount);
+            if (account != null && account.PortalEnabled == false)
+            {
+                using (ZohoCRMProxy.ZohoCRMAccount accountRequest = new ZohoCRMProxy.ZohoCRMAccount(_zohoToken))
+                {
+                    try
+                    {
+                        var zAccount = new ZohoCRMProxy.ZohoAccount
+                        {
+                            Id = partnerPortal.PartnerAccount,
+                            PortalEnabled = true
+                        };
+                        accountRequest.Update(zAccount);
+                        result.IsSuccess = true;
+                        message.AppendLine("Zoho Account Updated.");
+
+                    }
+                    catch (Exception e)
+                    {
+                        result.IsSuccess = false;
+                        message.AppendLine(e.Message);
+                    }
+                }
+            }
+
+
+                if (needUpdateContact || needUpdateOldContact)
             {
                 var zohoContact = new ZohoCRMProxy.ZohoContact
                 {
@@ -700,6 +731,9 @@ namespace DataImporter.Framework
                     }
                 }
             }
+
+
+
 
             result.Message = message.ToString();
 

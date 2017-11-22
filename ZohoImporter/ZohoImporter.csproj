@@ -28,7 +28,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MyobProxy\MyobCoreProxy\MyobCoreProxy.csproj" />
     <ProjectReference Include="..\DataImporter.Framework\DataImporter.Framework.csproj" />
   </ItemGroup>
 

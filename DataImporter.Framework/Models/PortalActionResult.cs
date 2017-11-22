@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Text;
-using MyobProxy.Models;
 
 namespace DataImporter.Framework.Models
 {
@@ -13,13 +12,13 @@ namespace DataImporter.Framework.Models
         public string Message { get; set; }
     }
 
-    public class MyobInventoryItemActionResult : PortalActionResult
-    {
-        public InventoryItem Item { get; set; }
-    }
+    //public class MyobInventoryItemActionResult : PortalActionResult
+    //{
+    //    public InventoryItem Item { get; set; }
+    //}
 
-    public class MyobContactCustomerActionResult : PortalActionResult
-    {
-        public Customer Customer { get; set; }
-    }
+    //public class MyobContactCustomerActionResult : PortalActionResult
+    //{
+    //    public Customer Customer { get; set; }
+    //}
 }

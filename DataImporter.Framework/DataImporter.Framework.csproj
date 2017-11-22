@@ -14,7 +14,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\MyobProxy\MyobCoreProxy\MyobCoreProxy.csproj" />
     <ProjectReference Include="..\..\..\ZohoProxy\ZohoCRMProxyMultiTarget\SharedLibrary\SharedLibrary.csproj" />
     <ProjectReference Include="..\..\..\ZohoProxy\ZohoCRMProxyMultiTarget\ZohoCRMProxy\ZohoCRMProxy\ZohoCRMProxy.csproj" />
   </ItemGroup>

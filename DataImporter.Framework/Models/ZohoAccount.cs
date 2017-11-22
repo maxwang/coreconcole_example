@@ -97,7 +97,7 @@ namespace DataImporter.Framework.Models
         public string MyobDataFile { get; set; }
         public string RelatedDistributorId { get; set; }
         public string CompanyEmail { get; set; }
-
+        public bool PortalEnabled { get; set;}
 
     }
 }

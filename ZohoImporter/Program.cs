@@ -61,8 +61,8 @@ namespace ZohoImporter
             services.Configure<SMTPOptions>(configuration.GetSection("SMTPSettings"));
             services.AddSingleton<IEmailSender, SMSEmailSender>();
 
-            services.Configure<MyobImportOptions>(configuration.GetSection("MyobImportOptions"));
-            services.AddSingleton<DataImporter.Framework.Services.MyobApiService>();
+            //services.Configure<MyobImportOptions>(configuration.GetSection("MyobImportOptions"));
+            //services.AddSingleton<DataImporter.Framework.Services.MyobApiService>();
 
             services.AddScoped<IZohoCRMDataRepository, ZohoCRMDbRepository>();
 
@@ -71,7 +71,7 @@ namespace ZohoImporter
 
             var provider = services.BuildServiceProvider();
 
-            var importer = new ZohoImportManager(provider.GetService<MyobApiService>(), provider.GetService<IZohoCRMDataRepository>(),
+            var importer = new ZohoImportManager(provider.GetService<IZohoCRMDataRepository>(),
                     provider.GetService<IEmailSender>(), configuration.GetValue<string>("ZohoToken"));
 
             importer.DisplayMessage += Importer_DisplayMessage;

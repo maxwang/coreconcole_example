@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.4
+VisualStudioVersion = 15.0.26730.12
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataImporter.Framework", "DataImporter.Framework\DataImporter.Framework.csproj", "{7E99C9B9-DD74-4B73-8AE9-3497B8482AA2}"
 EndProject
@@ -19,7 +19,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ZohoCRMProxy", "..\..\ZohoP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharedLibrary", "..\..\ZohoProxy\ZohoCRMProxyMultiTarget\SharedLibrary\SharedLibrary.csproj", "{64F24C03-BAC9-4958-BBCE-94562A5C8891}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyobCoreProxy", "..\..\MyobProxy\MyobCoreProxy\MyobCoreProxy.csproj", "{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MyobCoreProxy", "..\..\MyobProxy\MyobCoreProxy\MyobCoreProxy.csproj", "{B6C8F154-5D8C-4EEE-B228-C86D1C02A20F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,15 +47,18 @@ Global
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64F24C03-BAC9-4958-BBCE-94562A5C8891}.Release|Any CPU.Build.0 = Release|Any CPU
-		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{4D24A8E8-AACC-4B4A-B9B1-2588841BE3B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B6C8F154-5D8C-4EEE-B228-C86D1C02A20F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B6C8F154-5D8C-4EEE-B228-C86D1C02A20F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B6C8F154-5D8C-4EEE-B228-C86D1C02A20F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B6C8F154-5D8C-4EEE-B228-C86D1C02A20F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{00D65E4C-9AA6-4195-B93D-65CD2397153D} = {503BE148-AC58-4A33-B651-55575F35BB0A}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {BA9702AC-8D65-4944-B113-490D400E90B0}
 	EndGlobalSection
 EndGlobal
